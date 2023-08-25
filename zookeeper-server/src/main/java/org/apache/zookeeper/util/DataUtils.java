@@ -16,14 +16,24 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.util;
+package org.apache.zookeeper.util;
 
-import javax.security.auth.kerberos.KerberosPrincipal;
+import org.apache.zookeeper.data.Stat;
 
-public class KerberosUtil {
+public class DataUtils {
 
-    public static String getDefaultRealm() throws IllegalArgumentException {
-        return new KerberosPrincipal("tmp", 1).getRealm();
+    public static void copyStat(Stat from, Stat to) {
+        to.setAversion(from.getAversion());
+        to.setCtime(from.getCtime());
+        to.setCversion(from.getCversion());
+        to.setCzxid(from.getCzxid());
+        to.setMtime(from.getMtime());
+        to.setMzxid(from.getMzxid());
+        to.setPzxid(from.getPzxid());
+        to.setVersion(from.getVersion());
+        to.setEphemeralOwner(from.getEphemeralOwner());
+        to.setDataLength(from.getDataLength());
+        to.setNumChildren(from.getNumChildren());
     }
 
 }

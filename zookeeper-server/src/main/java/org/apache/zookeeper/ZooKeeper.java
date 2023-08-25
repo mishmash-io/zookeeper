@@ -47,6 +47,7 @@ import org.apache.zookeeper.client.HostProvider;
 import org.apache.zookeeper.client.StaticHostProvider;
 import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.client.ZooKeeperSaslClient;
+import org.apache.zookeeper.common.Environment;
 import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.ClientInfo;
@@ -82,8 +83,7 @@ import org.apache.zookeeper.proto.SetDataResponse;
 import org.apache.zookeeper.proto.SyncRequest;
 import org.apache.zookeeper.proto.SyncResponse;
 import org.apache.zookeeper.proto.WhoAmIResponse;
-import org.apache.zookeeper.server.DataTree;
-import org.apache.zookeeper.server.EphemeralType;
+import org.apache.zookeeper.util.DataUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1450,7 +1450,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataTree.copyStat(response.getStat(), stat);
+            DataUtils.copyStat(response.getStat(), stat);
         }
         if (cnxn.chrootPath == null) {
             return response.getPath();
@@ -1972,7 +1972,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataTree.copyStat(response.getStat(), stat);
+            DataUtils.copyStat(response.getStat(), stat);
         }
         return response.getData();
     }
@@ -2074,7 +2074,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), configZnode);
         }
         if (stat != null) {
-            DataTree.copyStat(response.getStat(), stat);
+            DataUtils.copyStat(response.getStat(), stat);
         }
         return response.getData();
     }
@@ -2236,7 +2236,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataTree.copyStat(response.getStat(), stat);
+            DataUtils.copyStat(response.getStat(), stat);
         }
         return response.getAcl();
     }
@@ -2480,7 +2480,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataTree.copyStat(response.getStat(), stat);
+            DataUtils.copyStat(response.getStat(), stat);
         }
         return response.getChildren();
     }

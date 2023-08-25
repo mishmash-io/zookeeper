@@ -29,13 +29,13 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import org.apache.zookeeper.AsyncCallback;
 import org.apache.zookeeper.ClientCnxn;
-import org.apache.zookeeper.Login;
-import org.apache.zookeeper.SaslClientCallbackHandler;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
+import org.apache.zookeeper.common.Login;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.proto.GetSASLRequest;
 import org.apache.zookeeper.proto.SetSASLResponse;
+import org.apache.zookeeper.util.SaslClientCallbackHandler;
 import org.apache.zookeeper.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +136,7 @@ public class ZooKeeperSaslClient {
         }
         if (entries != null) {
             this.configStatus = "Will attempt to SASL-authenticate using Login Context section '" + clientSection + "'";
-            this.saslClient = createSaslClient(serverPrincipal, clientSection);
+            this.saslClient = createSaslClient(serverPrincipal, ZKClientConfig.LOGIN_CONTEXT_NAME_KEY, clientSection);
         } else {
             // Handle situation of clientSection's being null: it might simply because the client does not intend to
             // use SASL, so not necessarily an error.
@@ -234,6 +234,7 @@ public class ZooKeeperSaslClient {
 
     private SaslClient createSaslClient(
         final String servicePrincipal,
+        final String loginContextKey,
         final String loginContext) throws LoginException {
         try {
             if (!initializedLogin) {
@@ -242,7 +243,7 @@ public class ZooKeeperSaslClient {
                         LOG.debug("JAAS loginContext is: {}", loginContext);
                         // note that the login object is static: it's shared amongst all zookeeper-related connections.
                         // in order to ensure the login is initialized only once, it must be synchronized the code snippet.
-                        login = new Login(loginContext, new SaslClientCallbackHandler(null, "Client"), clientConfig);
+                        login = new Login(loginContextKey, loginContext, new SaslClientCallbackHandler(null, "Client"), clientConfig);
                         login.startThreadIfNeeded();
                         initializedLogin = true;
                     }

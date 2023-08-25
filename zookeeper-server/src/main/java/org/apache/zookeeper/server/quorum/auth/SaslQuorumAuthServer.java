@@ -31,7 +31,7 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.BinaryOutputArchive;
-import org.apache.zookeeper.Login;
+import org.apache.zookeeper.common.Login;
 import org.apache.zookeeper.common.ZKConfig;
 import org.apache.zookeeper.server.quorum.QuorumAuthPacket;
 import org.apache.zookeeper.util.SecurityUtils;
@@ -46,7 +46,7 @@ public class SaslQuorumAuthServer implements QuorumAuthServer {
     private final Login serverLogin;
     private final boolean quorumRequireSasl;
 
-    public SaslQuorumAuthServer(boolean quorumRequireSasl, String loginContext, Set<String> authzHosts) throws SaslException {
+    public SaslQuorumAuthServer(boolean quorumRequireSasl, String loginContextKey, String loginContext, Set<String> authzHosts) throws SaslException {
         this.quorumRequireSasl = quorumRequireSasl;
         try {
             AppConfigurationEntry[] entries = Configuration.getConfiguration().getAppConfigurationEntry(loginContext);
@@ -57,7 +57,7 @@ public class SaslQuorumAuthServer implements QuorumAuthServer {
             }
             SaslQuorumServerCallbackHandler saslServerCallbackHandler = new SaslQuorumServerCallbackHandler(
                 Configuration.getConfiguration(), loginContext, authzHosts);
-            serverLogin = new Login(loginContext, saslServerCallbackHandler, new ZKConfig());
+            serverLogin = new Login(loginContextKey, loginContext, saslServerCallbackHandler, new ZKConfig());
             serverLogin.startThreadIfNeeded();
         } catch (Throwable e) {
             throw new SaslException("Failed to initialize authentication mechanism using SASL", e);

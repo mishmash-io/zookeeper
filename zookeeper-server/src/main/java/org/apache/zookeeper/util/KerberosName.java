@@ -25,14 +25,13 @@
  *    "zookeeper.security.auth_to_local" is used.
  */
 
-package org.apache.zookeeper.server.auth;
+package org.apache.zookeeper.util;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.zookeeper.server.util.KerberosUtil;
 
 /**
  * This class implements parsing and handling of Kerberos principal names. In

@@ -21,6 +21,8 @@ package org.apache.zookeeper.server.watch;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.apache.zookeeper.common.PathParentIterator;
 import org.junit.jupiter.api.Test;
 
 public class PathParentIteratorTest {

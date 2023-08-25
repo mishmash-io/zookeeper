@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper;
+package org.apache.zookeeper.common;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.apache.zookeeper.server.ExitCode;
+
+import org.apache.zookeeper.util.ExitCode;
 import org.apache.zookeeper.util.ServiceUtils;
 
 public class Version implements org.apache.zookeeper.version.Info {

@@ -33,10 +33,10 @@ import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.BinaryOutputArchive;
-import org.apache.zookeeper.Login;
-import org.apache.zookeeper.SaslClientCallbackHandler;
+import org.apache.zookeeper.common.Login;
 import org.apache.zookeeper.common.ZKConfig;
 import org.apache.zookeeper.server.quorum.QuorumAuthPacket;
+import org.apache.zookeeper.util.SaslClientCallbackHandler;
 import org.apache.zookeeper.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +52,7 @@ public class SaslQuorumAuthLearner implements QuorumAuthLearner {
     public SaslQuorumAuthLearner(
         boolean quorumRequireSasl,
         String quorumServicePrincipal,
+        String loginContextKey,
         String loginContext) throws SaslException {
         this.quorumRequireSasl = quorumRequireSasl;
         this.quorumServicePrincipal = quorumServicePrincipal;
@@ -63,6 +64,7 @@ public class SaslQuorumAuthLearner implements QuorumAuthLearner {
                     loginContext));
             }
             this.learnerLogin = new Login(
+                loginContextKey,
                 loginContext,
                 new SaslClientCallbackHandler(null, "QuorumLearner"),
                 new ZKConfig());

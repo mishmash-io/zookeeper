@@ -31,6 +31,7 @@ import javax.security.auth.login.Configuration;
 import javax.security.sasl.AuthorizeCallback;
 import javax.security.sasl.RealmCallback;
 import org.apache.zookeeper.server.ZooKeeperSaslServer;
+import org.apache.zookeeper.util.KerberosName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

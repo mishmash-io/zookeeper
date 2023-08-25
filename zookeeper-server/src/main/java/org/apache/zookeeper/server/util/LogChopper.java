@@ -32,11 +32,11 @@ import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.BinaryOutputArchive;
 import org.apache.jute.Record;
 import org.apache.yetus.audience.InterfaceAudience;
-import org.apache.zookeeper.server.ExitCode;
 import org.apache.zookeeper.server.TxnLogEntry;
 import org.apache.zookeeper.server.persistence.FileHeader;
 import org.apache.zookeeper.server.persistence.FileTxnLog;
 import org.apache.zookeeper.txn.TxnHeader;
+import org.apache.zookeeper.util.ExitCode;
 import org.apache.zookeeper.util.ServiceUtils;
 
 /**

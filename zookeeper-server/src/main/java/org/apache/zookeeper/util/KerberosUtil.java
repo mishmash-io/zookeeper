@@ -16,30 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.command;
+package org.apache.zookeeper.util;
 
-import java.io.PrintWriter;
-import java.util.List;
+import javax.security.auth.kerberos.KerberosPrincipal;
 
-import org.apache.zookeeper.common.Environment;
-import org.apache.zookeeper.server.ServerCnxn;
+public class KerberosUtil {
 
-public class EnvCommand extends AbstractFourLetterCommand {
-
-    EnvCommand(PrintWriter pw, ServerCnxn serverCnxn) {
-        super(pw, serverCnxn);
-    }
-
-    @Override
-    public void commandRun() {
-        List<Environment.Entry> env = Environment.list();
-
-        pw.println("Environment:");
-        for (Environment.Entry e : env) {
-            pw.print(e.getKey());
-            pw.print("=");
-            pw.println(e.getValue());
-        }
+    public static String getDefaultRealm() throws IllegalArgumentException {
+        return new KerberosPrincipal("tmp", 1).getRealm();
     }
 
 }

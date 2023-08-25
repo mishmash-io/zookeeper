@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.BinaryOutputArchive;
+import org.apache.zookeeper.common.ByteBufferInputStream;
 import org.apache.zookeeper.data.Stat;
-import org.apache.zookeeper.server.ByteBufferInputStream;
 import org.junit.jupiter.api.Test;
 
 public class MultiResponseTest extends ZKTestCase {

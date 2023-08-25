@@ -32,9 +32,10 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.apache.zookeeper.Environment;
-import org.apache.zookeeper.Environment.Entry;
-import org.apache.zookeeper.Version;
+
+import org.apache.zookeeper.common.Environment;
+import org.apache.zookeeper.common.Version;
+import org.apache.zookeeper.common.Environment.Entry;
 import org.apache.zookeeper.server.DataTree;
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ServerMetrics;

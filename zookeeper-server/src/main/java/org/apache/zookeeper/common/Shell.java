@@ -27,7 +27,7 @@
  *    it is not needed.
  */
 
-package org.apache.zookeeper;
+package org.apache.zookeeper.common;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -37,8 +37,8 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.apache.zookeeper.common.Time;
-import org.apache.zookeeper.server.ExitCode;
+
+import org.apache.zookeeper.util.ExitCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

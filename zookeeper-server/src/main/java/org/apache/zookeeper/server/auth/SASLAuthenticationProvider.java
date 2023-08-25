@@ -20,6 +20,7 @@ package org.apache.zookeeper.server.auth;
 
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.server.ServerCnxn;
+import org.apache.zookeeper.util.KerberosName;
 
 public class SASLAuthenticationProvider implements AuthenticationProvider {
 

@@ -25,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.zookeeper.CreateMode;
+import org.apache.zookeeper.EphemeralType;
+import org.apache.zookeeper.EphemeralTypeEmulate353;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.TestableZooKeeper;
 import org.apache.zookeeper.ZooDefs;

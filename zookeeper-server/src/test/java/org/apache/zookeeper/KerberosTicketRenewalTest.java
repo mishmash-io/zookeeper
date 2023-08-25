@@ -39,6 +39,7 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.zookeeper.common.Login;
 import org.apache.zookeeper.common.ZKConfig;
 import org.apache.zookeeper.server.quorum.auth.KerberosTestUtils;
 import org.apache.zookeeper.server.quorum.auth.MiniKdc;

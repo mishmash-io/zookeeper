@@ -66,6 +66,7 @@ import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.common.ClientX509Util;
+import org.apache.zookeeper.common.ConfigException;
 import org.apache.zookeeper.common.NettyUtils;
 import org.apache.zookeeper.common.SSLContextAndOptions;
 import org.apache.zookeeper.common.X509Exception;
@@ -520,7 +521,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
         if (usePortUnification) {
             try {
                 QuorumPeerConfig.configureSSLAuth();
-            } catch (QuorumPeerConfig.ConfigException e) {
+            } catch (ConfigException e) {
                 LOG.error("unable to set up SslAuthProvider, turning off client port unification", e);
                 usePortUnification = false;
             }

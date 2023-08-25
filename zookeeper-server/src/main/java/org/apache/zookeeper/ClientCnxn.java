@@ -69,7 +69,10 @@ import org.apache.zookeeper.ZooKeeper.WatchRegistration;
 import org.apache.zookeeper.client.HostProvider;
 import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.client.ZooKeeperSaslClient;
+import org.apache.zookeeper.common.ByteBufferInputStream;
 import org.apache.zookeeper.common.Time;
+import org.apache.zookeeper.common.Trace;
+import org.apache.zookeeper.common.ZooKeeperThread;
 import org.apache.zookeeper.proto.AuthPacket;
 import org.apache.zookeeper.proto.ConnectRequest;
 import org.apache.zookeeper.proto.Create2Response;
@@ -89,9 +92,6 @@ import org.apache.zookeeper.proto.SetDataResponse;
 import org.apache.zookeeper.proto.SetWatches;
 import org.apache.zookeeper.proto.SetWatches2;
 import org.apache.zookeeper.proto.WatcherEvent;
-import org.apache.zookeeper.server.ByteBufferInputStream;
-import org.apache.zookeeper.server.ZooKeeperThread;
-import org.apache.zookeeper.server.ZooTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -1325,9 +1325,9 @@ public class ClientCnxn {
             if (zooKeeperSaslClient != null) {
                 zooKeeperSaslClient.shutdown();
             }
-            ZooTrace.logTraceMessage(
+            Trace.logTraceMessage(
                 LOG,
-                ZooTrace.getTextTraceLevel(),
+                Trace.getTextTraceLevel(),
                 "SendThread exited loop for session: 0x" + Long.toHexString(getSessionId()));
         }
 

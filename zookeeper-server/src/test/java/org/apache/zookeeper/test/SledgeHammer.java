@@ -26,7 +26,7 @@ import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.data.Stat;
-import org.apache.zookeeper.server.ExitCode;
+import org.apache.zookeeper.util.ExitCode;
 
 public class SledgeHammer extends Thread {
 

@@ -18,66 +18,12 @@
 
 package org.apache.zookeeper.server;
 
+import org.apache.zookeeper.common.Trace;
 import org.apache.zookeeper.server.quorum.LearnerHandler;
 import org.apache.zookeeper.server.quorum.QuorumPacket;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-/**
- * This class encapsulates and centralizes tracing for the ZooKeeper server.
- * Trace messages go to the log with TRACE level.
- * <p>
- * Logback must be correctly configured to capture the TRACE messages.
- */
-public class ZooTrace {
-
-    public static final long CLIENT_REQUEST_TRACE_MASK = 1 << 1;
-
-    /**
-     * this field is obsolete
-     */
-    @Deprecated
-    public static final long CLIENT_DATA_PACKET_TRACE_MASK = 1 << 2;
-
-    public static final long CLIENT_PING_TRACE_MASK = 1 << 3;
-
-    public static final long SERVER_PACKET_TRACE_MASK = 1 << 4;
-
-    public static final long SESSION_TRACE_MASK = 1 << 5;
-
-    public static final long EVENT_DELIVERY_TRACE_MASK = 1 << 6;
-
-    public static final long SERVER_PING_TRACE_MASK = 1 << 7;
-
-    public static final long WARNING_TRACE_MASK = 1 << 8;
-
-    /**
-     * this field is obsolete
-     */
-    @Deprecated
-    public static final long JMX_TRACE_MASK = 1 << 9;
-
-    private static long traceMask = CLIENT_REQUEST_TRACE_MASK | SERVER_PACKET_TRACE_MASK | SESSION_TRACE_MASK | WARNING_TRACE_MASK;
-
-    public static synchronized long getTextTraceLevel() {
-        return traceMask;
-    }
-
-    public static synchronized void setTextTraceLevel(long mask) {
-        traceMask = mask;
-        final Logger LOG = LoggerFactory.getLogger(ZooTrace.class);
-        LOG.info("Set text trace mask to 0x{}", Long.toHexString(mask));
-    }
-
-    public static synchronized boolean isTraceEnabled(Logger log, long mask) {
-        return log.isTraceEnabled() && (mask & traceMask) != 0;
-    }
-
-    public static void logTraceMessage(Logger log, long mask, String msg) {
-        if (isTraceEnabled(log, mask)) {
-            log.trace(msg);
-        }
-    }
+public class ZooTrace extends Trace {
 
     public static void logQuorumPacket(Logger log, long mask, char direction, QuorumPacket qp) {
         if (isTraceEnabled(log, mask)) {

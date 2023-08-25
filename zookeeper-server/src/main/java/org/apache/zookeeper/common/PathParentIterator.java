@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.watch;
+package org.apache.zookeeper.common;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

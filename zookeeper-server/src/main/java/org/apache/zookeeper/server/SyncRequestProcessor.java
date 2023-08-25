@@ -29,6 +29,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import org.apache.zookeeper.common.Time;
+import org.apache.zookeeper.common.ZooKeeperThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

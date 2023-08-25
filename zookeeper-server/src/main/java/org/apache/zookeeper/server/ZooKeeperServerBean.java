@@ -20,7 +20,7 @@ package org.apache.zookeeper.server;
 
 import java.util.Date;
 import org.apache.jute.BinaryInputArchive;
-import org.apache.zookeeper.Version;
+import org.apache.zookeeper.common.Version;
 import org.apache.zookeeper.jmx.ZKMBeanInfo;
 import org.apache.zookeeper.server.quorum.CommitProcessor;
 

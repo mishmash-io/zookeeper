@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server;
+package org.apache.zookeeper;
 
 /**
  * See https://issues.apache.org/jira/browse/ZOOKEEPER-2901

@@ -27,7 +27,7 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.function.Consumer;
-import org.apache.zookeeper.server.ZooKeeperThread;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

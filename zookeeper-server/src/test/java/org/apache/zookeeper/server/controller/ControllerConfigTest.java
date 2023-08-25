@@ -25,7 +25,8 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
+
+import org.apache.zookeeper.common.ConfigException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -109,7 +110,7 @@ public class ControllerConfigTest {
         try {
             ControllerServerConfig config = new ControllerServerConfig(configFile.getAbsolutePath());
             Assert.fail("Should have thrown with missing server config");
-        } catch (QuorumPeerConfig.ConfigException ex) {
+        } catch (ConfigException ex) {
         }
     }
 
@@ -117,16 +118,16 @@ public class ControllerConfigTest {
         try {
             ControllerServerConfig config = new ControllerServerConfig("DontLookHere.missing");
             Assert.fail("should have thrown");
-        } catch (QuorumPeerConfig.ConfigException ex) {
+        } catch (ConfigException ex) {
         }
     }
 
     @Test
-    public void parseInvalidPortThrows()throws QuorumPeerConfig.ConfigException {
+    public void parseInvalidPortThrows()throws ConfigException {
         try {
             ControllerServerConfig config = new ControllerServerConfig(configFile.getAbsolutePath());
             Assert.fail("should have thrown");
-        } catch (QuorumPeerConfig.ConfigException ex) {
+        } catch (ConfigException ex) {
         }
     }
 

@@ -35,7 +35,7 @@ import org.apache.kerby.kerberos.kerb.server.KdcConfigKey;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
 import org.apache.kerby.util.IOUtil;
 import org.apache.kerby.util.NetworkUtil;
-import org.apache.zookeeper.server.ExitCode;
+import org.apache.zookeeper.util.ExitCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

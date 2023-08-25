@@ -31,7 +31,6 @@ import org.apache.zookeeper.proto.DeleteRequest;
 import org.apache.zookeeper.proto.GetChildrenRequest;
 import org.apache.zookeeper.proto.GetDataRequest;
 import org.apache.zookeeper.proto.SetDataRequest;
-import org.apache.zookeeper.server.EphemeralType;
 
 /**
  * Represents a single operation in a multi-operation transaction.  Each operation can be a create, update,

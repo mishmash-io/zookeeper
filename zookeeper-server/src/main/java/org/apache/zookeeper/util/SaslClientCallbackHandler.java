@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper;
+package org.apache.zookeeper.util;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;

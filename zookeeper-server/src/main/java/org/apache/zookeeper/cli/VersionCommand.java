@@ -21,7 +21,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.zookeeper.Version;
+import org.apache.zookeeper.common.Version;
 
 /**
  * version command for cli

@@ -29,8 +29,9 @@ import javax.management.JMException;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
-import org.apache.zookeeper.Environment;
-import org.apache.zookeeper.Login;
+
+import org.apache.zookeeper.common.Environment;
+import org.apache.zookeeper.common.Login;
 import org.apache.zookeeper.common.ZKConfig;
 import org.apache.zookeeper.jmx.MBeanRegistry;
 import org.apache.zookeeper.server.auth.SaslServerCallbackHandler;
@@ -270,7 +271,7 @@ public abstract class ServerCnxnFactory {
         // jaas.conf entry available
         try {
             saslServerCallbackHandler = new SaslServerCallbackHandler(Configuration.getConfiguration());
-            login = new Login(serverSection, saslServerCallbackHandler, new ZKConfig());
+            login = new Login(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY, serverSection, saslServerCallbackHandler, new ZKConfig());
             setLoginUser(login.getUserName());
             login.startThreadIfNeeded();
         } catch (LoginException e) {

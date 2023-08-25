@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper;
+package org.apache.zookeeper.common;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

@@ -19,7 +19,8 @@
 package org.apache.zookeeper.server.command;
 
 import java.io.PrintWriter;
-import org.apache.zookeeper.Version;
+
+import org.apache.zookeeper.common.Version;
 import org.apache.zookeeper.server.ServerCnxn;
 import org.apache.zookeeper.server.ServerStats;
 import org.apache.zookeeper.server.quorum.BufferStats;

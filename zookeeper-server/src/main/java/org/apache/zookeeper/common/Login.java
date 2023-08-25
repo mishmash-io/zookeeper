@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper;
+package org.apache.zookeeper.common;
 
 /**
  * This class is responsible for refreshing Kerberos credentials for
@@ -36,10 +36,7 @@ import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-import org.apache.zookeeper.client.ZKClientConfig;
-import org.apache.zookeeper.common.Time;
-import org.apache.zookeeper.common.ZKConfig;
-import org.apache.zookeeper.server.ZooKeeperSaslServer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +71,7 @@ public class Login {
     private boolean isUsingTicketCache = false;
 
     private LoginContext login = null;
+    private String loginContextNameKey = null;
     private String loginContextName = null;
     private String principal = null;
 
@@ -97,10 +95,11 @@ public class Login {
      * @throws javax.security.auth.login.LoginException
      *             Thrown if authentication fails.
      */
-    public Login(final String loginContextName, CallbackHandler callbackHandler, final ZKConfig zkConfig) throws LoginException {
+    public Login(final String loginContextNameKey, final String loginContextName, CallbackHandler callbackHandler, final ZKConfig zkConfig) throws LoginException {
         this.zkConfig = zkConfig;
         this.callbackHandler = callbackHandler;
         login = login(loginContextName);
+        this.loginContextNameKey = loginContextNameKey;
         this.loginContextName = loginContextName;
         subject = login.getSubject();
         isKrbTicket = !subject.getPrivateCredentials(KerberosTicket.class).isEmpty();
@@ -322,17 +321,10 @@ public class Login {
     }
 
     private String getLoginContextMessage() {
-        if (zkConfig instanceof ZKClientConfig) {
-            return ZKClientConfig.LOGIN_CONTEXT_NAME_KEY
-                   + "(="
-                   + zkConfig.getProperty(ZKClientConfig.LOGIN_CONTEXT_NAME_KEY, ZKClientConfig.LOGIN_CONTEXT_NAME_KEY_DEFAULT)
-                   + ")";
-        } else {
-            return ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY
-                   + "(="
-                   + System.getProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY, ZooKeeperSaslServer.DEFAULT_LOGIN_CONTEXT_NAME)
-                   + ")";
-        }
+        return loginContextNameKey
+                + "(="
+                + loginContextName
+                + ")";
     }
 
     // c.f. org.apache.hadoop.security.UserGroupInformation.

@@ -42,6 +42,7 @@ import org.apache.zookeeper.common.AtomicFileWritingIdiom;
 import org.apache.zookeeper.common.AtomicFileWritingIdiom.OutputStreamStatement;
 import org.apache.zookeeper.common.AtomicFileWritingIdiom.WriterStatement;
 import org.apache.zookeeper.common.ClientX509Util;
+import org.apache.zookeeper.common.ConfigException;
 import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.common.StringUtils;
 import org.apache.zookeeper.metrics.impl.DefaultMetricsProvider;
@@ -55,7 +56,7 @@ import org.apache.zookeeper.server.quorum.flexible.QuorumMaj;
 import org.apache.zookeeper.server.quorum.flexible.QuorumOracleMaj;
 import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
 import org.apache.zookeeper.server.util.JvmPauseMonitor;
-import org.apache.zookeeper.server.util.VerifyingFileFactory;
+import org.apache.zookeeper.util.VerifyingFileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -155,18 +156,6 @@ public class QuorumPeerConfig {
      * JVM Pause Monitor sleep time in ms
      */
     protected long jvmPauseSleepTimeMs = JvmPauseMonitor.SLEEP_TIME_MS_DEFAULT;
-
-    @SuppressWarnings("serial")
-    public static class ConfigException extends Exception {
-
-        public ConfigException(String msg) {
-            super(msg);
-        }
-        public ConfigException(String msg, Exception e) {
-            super(msg, e);
-        }
-
-    }
 
     /**
      * Parse a ZooKeeper configuration file

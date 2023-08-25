@@ -21,7 +21,6 @@ package org.apache.zookeeper;
 import java.util.List;
 import java.util.Objects;
 import org.apache.zookeeper.data.ACL;
-import org.apache.zookeeper.server.EphemeralType;
 
 /**
  * Options for creating znode in ZooKeeper data tree.

@@ -27,8 +27,7 @@ import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
-import org.apache.zookeeper.SaslClientCallbackHandler;
-import org.apache.zookeeper.server.auth.KerberosName;
+
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;

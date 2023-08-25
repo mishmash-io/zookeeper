@@ -18,6 +18,8 @@
 
 package org.apache.zookeeper.server;
 
+import org.apache.zookeeper.common.ZooKeeperThread;
+import org.apache.zookeeper.util.ExitCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
