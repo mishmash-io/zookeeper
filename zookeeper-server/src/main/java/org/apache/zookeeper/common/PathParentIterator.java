@@ -50,7 +50,7 @@ public class PathParentIterator implements Iterator<String> {
         return new PathParentIterator(path, 0);
     }
 
-    private PathParentIterator(String path, int maxLevel) {
+    /*private*/ protected PathParentIterator(String path, int maxLevel) {
         // NOTE: asserts that the path has already been validated
         this.path = path;
         this.maxLevel = maxLevel;
