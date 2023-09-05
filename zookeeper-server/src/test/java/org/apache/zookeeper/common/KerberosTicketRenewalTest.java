@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper;
+package org.apache.zookeeper.common;
 
 import static org.apache.zookeeper.server.quorum.auth.MiniKdc.MAX_TICKET_LIFETIME;
 import static org.apache.zookeeper.server.quorum.auth.MiniKdc.MIN_TICKET_LIFETIME;
@@ -39,8 +39,7 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.zookeeper.common.Login;
-import org.apache.zookeeper.common.ZKConfig;
+import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.server.quorum.auth.KerberosTestUtils;
 import org.apache.zookeeper.server.quorum.auth.MiniKdc;
 import org.apache.zookeeper.test.ClientBase;
@@ -128,7 +127,7 @@ public class KerberosTicketRenewalTest {
     private CountDownLatch continueRefreshThread = new CountDownLatch(1);
 
     public TestableKerberosLogin() throws LoginException {
-      super(JAAS_CONFIG_SECTION, (callbacks) -> {}, new ZKConfig());
+      super(ZKClientConfig.LOGIN_CONTEXT_NAME_KEY, JAAS_CONFIG_SECTION, (callbacks) -> {}, new ZKConfig());
     }
 
     @Override
