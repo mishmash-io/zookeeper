@@ -21,7 +21,7 @@ package org.apache.zookeeper.util;
 import java.io.File;
 import org.slf4j.Logger;
 
-public /*final*/ class VerifyingFileFactory {
+public class VerifyingFileFactory {
 
     private final boolean warnForRelativePath;
     private final boolean failForNonExistingPath;
