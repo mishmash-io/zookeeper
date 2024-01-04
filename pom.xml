@@ -31,7 +31,7 @@
   <artifactId>parent</artifactId>
   <packaging>pom</packaging>
   <!-- to change version: mvn -B release:update-versions -DdevelopmentVersion=3.6.0-SNAPSHOT -->
-  <version>3.8.2</version>
+  <version>3.8.3</version>
   <name>Apache ZooKeeper</name>
   <description>
     ZooKeeper is a centralized service for maintaining configuration information, naming,
@@ -71,7 +71,7 @@
     <connection>scm:git:https://gitbox.apache.org/repos/asf/zookeeper.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/zookeeper.git</developerConnection>
     <url>https://gitbox.apache.org/repos/asf/zookeeper.git</url>
-    <tag>release-3.8.2-0</tag>
+    <tag>release-3.8.3-0</tag>
   </scm>
   <issueManagement>
     <system>JIRA</system>
@@ -468,10 +468,10 @@
     <hamcrest.version>2.2</hamcrest.version>
     <commons-cli.version>1.5.0</commons-cli.version>
     <netty.version>4.1.94.Final</netty.version>
-    <jetty.version>9.4.51.v20230217</jetty.version>
+    <jetty.version>9.4.52.v20230823</jetty.version>
     <jackson.version>2.15.2</jackson.version>
     <jline.version>2.14.6</jline.version>
-    <snappy.version>1.1.10.1</snappy.version>
+    <snappy.version>1.1.10.5</snappy.version>
     <kerby.version>2.0.0</kerby.version>
     <bouncycastle.version>1.60</bouncycastle.version>
     <commons-collections.version>4.4</commons-collections.version>
@@ -792,7 +792,7 @@
         <plugin>
           <groupId>org.owasp</groupId>
           <artifactId>dependency-check-maven</artifactId>
-          <version>7.1.0</version>
+          <version>8.3.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
