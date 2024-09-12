@@ -23,7 +23,7 @@ import org.junit.platform.suite.api.SelectClasses;
 /**
  * Run tests with: Nio Client against Netty server
  */
-@SuiteClasses({ACLTest.class, AsyncOpsTest.class, ChrootClientTest.class, ClientTest.class, FourLetterWordsTest.class, NullDataTest.class, SessionTest.class, WatcherTest.class, ReconfigTest.class})
+@SelectClasses({ACLTest.class, AsyncOpsTest.class, ChrootClientTest.class, ClientTest.class, FourLetterWordsTest.class, NullDataTest.class, SessionTest.class, WatcherTest.class, ReconfigTest.class})
 public class NioNettySuiteTest extends NioNettySuiteBase {
 
 }

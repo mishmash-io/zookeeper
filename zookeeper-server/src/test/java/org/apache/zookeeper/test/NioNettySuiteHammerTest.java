@@ -23,7 +23,7 @@ import org.junit.platform.suite.api.SelectClasses;
 /**
  * Run tests with: Nio Client against Netty server
  */
-@SuiteClasses({AsyncHammerTest.class})
+@SelectClasses({AsyncHammerTest.class})
 public class NioNettySuiteHammerTest extends NioNettySuiteBase {
 
 }
