@@ -114,9 +114,9 @@ public class StatsTrackTest {
         assertEquals("count=4,bytes=9=;byteHardLimit=15;countHardLimit=4", quota.toString());
 
         OldStatsTrack ost = new OldStatsTrack(quota.toString());
-        assertTrue("bytes are set", ost.getBytes() == 9L);
-        assertTrue("num count is set", ost.getCount() == 4);
-        assertEquals("count=4,bytes=9", ost.toString());
+        assertTrue(ost.getBytes() == 9L, "bytes are set");
+        assertTrue(ost.getCount() == 4, "num count is set");
+        assertEquals(ost.toString(), "count=4,bytes=9");
     }
 
     @Test
