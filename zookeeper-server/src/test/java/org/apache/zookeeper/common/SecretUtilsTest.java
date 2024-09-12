@@ -46,7 +46,7 @@ public class SecretUtilsTest {
         final Path secretFile = createSecretFile(secretTxt);
 
         final char[] secret = SecretUtils.readSecret(secretFile.toString());
-        assertEquals(secretTxt.substring(0, secretTxt.length() - 1), String.valueOf(secret));
+        assertEquals(secretTxt.substring(0, secretTxt.length() - System.lineSeparator().length()), String.valueOf(secret));
     }
 
     @Test
@@ -54,11 +54,11 @@ public class SecretUtilsTest {
         final String pathToFile = "NonExistingFile";
         final IllegalStateException exception =
                 assertThrows(IllegalStateException.class, () -> SecretUtils.readSecret(pathToFile));
-        assertEquals("Exception occurred while reading secret from file " + pathToFile, exception.getMessage());
+        assertEquals("Exception occurred when reading secret from file " + pathToFile, exception.getMessage());
     }
 
     public static Path createSecretFile(final String secretTxt) throws IOException {
-        final Path path = Files.createTempFile("test_", ".secrete");
+        final Path path = Files.createTempFile("test_", ".secret");
 
         final BufferedWriter writer = new BufferedWriter(new FileWriter(path.toString()));
         writer.append(secretTxt);
