@@ -18,12 +18,12 @@
 
 package org.apache.zookeeper.test;
 
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
 
 /**
  * Run tests with: Netty Client against Netty server
  */
-@Suite.SuiteClasses({AsyncHammerTest.class})
+@SelectClasses({AsyncHammerTest.class})
 public class NettyNettySuiteHammerTest extends NettyNettySuiteBase {
 
 }

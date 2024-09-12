@@ -27,10 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.zookeeper.common.ConfigException;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ControllerConfigTest {
     File configFile;
@@ -69,7 +70,7 @@ public class ControllerConfigTest {
         writer.close();
     }
 
-    @Before
+    @BeforeEach
     public void init() throws IOException {
         configFile = createTempFile();
     }
@@ -85,7 +86,7 @@ public class ControllerConfigTest {
         writer.close();
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         if (configFile != null) {
             configFile.delete();
@@ -96,9 +97,9 @@ public class ControllerConfigTest {
     public void parseFileSucceeds() throws Exception {
         writeFile(AnyPort);
         ControllerServerConfig config = new ControllerServerConfig(configFile.getAbsolutePath());
-        Assert.assertEquals(AnyPort, config.getControllerAddress().getPort());
-        Assert.assertEquals(AnyPort, config.getClientPortAddress().getPort());
-        Assert.assertEquals(AnyTickTime, config.getTickTime());
+        assertEquals(AnyPort, config.getControllerAddress().getPort());
+        assertEquals(AnyPort, config.getClientPortAddress().getPort());
+        assertEquals(AnyTickTime, config.getTickTime());
     }
 
     @Test
@@ -109,7 +110,7 @@ public class ControllerConfigTest {
         writer.close();
         try {
             ControllerServerConfig config = new ControllerServerConfig(configFile.getAbsolutePath());
-            Assert.fail("Should have thrown with missing server config");
+            fail("Should have thrown with missing server config");
         } catch (ConfigException ex) {
         }
     }
@@ -117,7 +118,7 @@ public class ControllerConfigTest {
     @Test public void parseMissingFileThrows() {
         try {
             ControllerServerConfig config = new ControllerServerConfig("DontLookHere.missing");
-            Assert.fail("should have thrown");
+            fail("should have thrown");
         } catch (ConfigException ex) {
         }
     }
@@ -126,7 +127,7 @@ public class ControllerConfigTest {
     public void parseInvalidPortThrows()throws ConfigException {
         try {
             ControllerServerConfig config = new ControllerServerConfig(configFile.getAbsolutePath());
-            Assert.fail("should have thrown");
+            fail("should have thrown");
         } catch (ConfigException ex) {
         }
     }
@@ -134,16 +135,16 @@ public class ControllerConfigTest {
     @Test
     public void validCtor() {
         ControllerServerConfig config = new ControllerServerConfig(AnyPort, AnyPort, AnyDataDir);
-        Assert.assertEquals(AnyPort, config.getControllerAddress().getPort());
-        Assert.assertEquals(AnyPort, config.getClientPortAddress().getPort());
-        Assert.assertEquals(AnyDataDir, config.getDataDir().getName());
+        assertEquals(AnyPort, config.getControllerAddress().getPort());
+        assertEquals(AnyPort, config.getClientPortAddress().getPort());
+        assertEquals(AnyDataDir, config.getDataDir().getName());
     }
 
     @Test
     public void invalidCtor() {
         try {
             ControllerServerConfig config = new ControllerServerConfig(-10, -10, "no where");
-            Assert.fail("should have thrown");
+            fail("should have thrown");
         } catch (IllegalArgumentException ex) {
         }
 

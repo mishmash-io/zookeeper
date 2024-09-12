@@ -24,13 +24,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.Suite;
 
 /**
  * Run tests with: Nio Client against Netty server
  */
-@RunWith(Suite.class)
+@Suite
 public class NioNettySuiteBase {
 
     @BeforeAll

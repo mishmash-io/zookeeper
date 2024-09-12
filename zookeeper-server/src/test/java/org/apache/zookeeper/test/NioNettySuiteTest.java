@@ -18,12 +18,12 @@
 
 package org.apache.zookeeper.test;
 
-import org.junit.runners.Suite;
+import org.junit.platform.suite.api.SelectClasses;
 
 /**
  * Run tests with: Nio Client against Netty server
  */
-@Suite.SuiteClasses({ACLTest.class, AsyncOpsTest.class, ChrootClientTest.class, ClientTest.class, FourLetterWordsTest.class, NullDataTest.class, SessionTest.class, WatcherTest.class, ReconfigTest.class})
+@SuiteClasses({ACLTest.class, AsyncOpsTest.class, ChrootClientTest.class, ClientTest.class, FourLetterWordsTest.class, NullDataTest.class, SessionTest.class, WatcherTest.class, ReconfigTest.class})
 public class NioNettySuiteTest extends NioNettySuiteBase {
 
 }
