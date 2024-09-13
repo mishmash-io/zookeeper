@@ -65,7 +65,7 @@ public class StatResetCommandTest {
 
         // Assert
         String output = outputWriter.toString();
-        assertEquals(ZK_NOT_SERVING + "\n", output);
+        assertEquals(ZK_NOT_SERVING + System.lineSeparator(), output);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class StatResetCommandTest {
 
         // Assert
         String output = outputWriter.toString();
-        assertEquals("Server stats reset.\n", output);
+        assertEquals("Server stats reset." + System.lineSeparator(), output);
         verify(serverStats, times(1)).reset();
     }
 
@@ -103,7 +103,7 @@ public class StatResetCommandTest {
 
         // Assert
         String output = outputWriter.toString();
-        assertEquals("Server stats reset.\n", output);
+        assertEquals("Server stats reset." + System.lineSeparator(), output);
         verify(serverStats, times(1)).reset();
         verify(bufferStats, times(1)).reset();
     }
