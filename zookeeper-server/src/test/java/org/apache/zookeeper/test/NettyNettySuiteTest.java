@@ -19,10 +19,12 @@
 package org.apache.zookeeper.test;
 
 import org.junit.platform.suite.api.SelectClasses;
+import org.junit.platform.suite.api.Suite;
 
 /**
  * Run tests with: Netty Client against Netty server
  */
+@Suite
 @SelectClasses({ACLTest.class, AsyncOpsTest.class, ChrootClientTest.class, ClientTest.class, FourLetterWordsTest.class, NullDataTest.class, SessionTest.class, WatcherTest.class, ReconfigTest.class})
 public class NettyNettySuiteTest extends NettyNettySuiteBase {
 

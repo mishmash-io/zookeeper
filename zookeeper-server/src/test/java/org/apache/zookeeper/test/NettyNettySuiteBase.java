@@ -26,12 +26,10 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.platform.suite.api.Suite;
 
 /**
  * Run tests with: Netty Client against Netty server
  */
-@Suite
 public class NettyNettySuiteBase {
 
     @BeforeAll
