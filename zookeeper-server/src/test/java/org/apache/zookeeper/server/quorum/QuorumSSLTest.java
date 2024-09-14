@@ -35,6 +35,7 @@ import java.io.OutputStream;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.file.Path;
@@ -141,7 +142,27 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
     private static final String PORT_UNIFICATION_DISABLED = "portUnification=false\n";
 
     private static final char[] PASSWORD = "testpass".toCharArray();
-    private static final String HOSTNAME = "localhost";
+    private static String HOSTNAME;
+
+    static {
+        try {
+            /*
+             * Tests below generate a variety of valid and invalid SSL certificates to make sure
+             * ZooKeeper correctly accepts and rejects incoming SSL connections.
+             * 
+             * Certificate validation (as done by ZkTrustManager) is done on IP address
+             * (127.0.0.1 is used by the tests) and/or the host name 127.0.0.1 reverse-resolves to.
+             * 
+             * As this hostname can vary depending on OS setup (might not be 'localhost'),
+             * try to reverse-resolve it to the correct value, so that valid certificates can be
+             * generated.
+             */
+            HOSTNAME = InetAddress.getByName("127.0.0.1").getHostName();
+        } catch (Exception e) {
+            // If reverse resolution fails, use a default
+            HOSTNAME = "localhost";
+        }
+    }
 
     private QuorumX509Util quorumX509Util;
 
@@ -706,7 +727,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
             defaultKeyPair,
             rootCertificate,
             rootKeyPair.getPrivate(),
-            "localhost",
+            HOSTNAME,
             "140.211.11.105",
             null,
             null);
@@ -829,6 +850,8 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
         setSSLSystemProperties();
         System.setProperty(quorumX509Util.getSslCrlEnabledProperty(), "true");
+        // java prefers to use OCSP for revocations, disable it for this test
+        Security.setProperty("ocsp.enable", "false");
 
         X509Certificate validCertificate = buildEndEntityCert(
             defaultKeyPair,
@@ -902,6 +925,8 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
             setSSLSystemProperties();
             System.setProperty(quorumX509Util.getSslOcspEnabledProperty(), "true");
+            // make sure OCSP revocation is enabled
+            Security.setProperty("ocsp.enable", "true");
 
             X509Certificate validCertificate = buildEndEntityCert(
                 defaultKeyPair,
