@@ -17,6 +17,7 @@
  */
 package org.apache.zookeeper.server;
 
+import java.net.InetAddress;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.apache.zookeeper.PortAssignment;
