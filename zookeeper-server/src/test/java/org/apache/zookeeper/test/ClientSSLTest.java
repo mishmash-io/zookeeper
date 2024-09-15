@@ -53,7 +53,14 @@ public class ClientSSLTest extends QuorumPeerTestBase {
     private ClientX509Util clientX509Util;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
+        if (!"localhost".equals(InetAddress.getByName("127.0.0.1").getHostName())) {
+            throw new Exception("The IP Address 127.0.0.1 does not reverse-resolve to 'localhost'"
+                + " which is required for " + ClientSSLTest.class.getName() + " tests."
+                + " Fix OS DNS resoltion or run with -Djdk.net.hosts.file=<file>"
+                + " pointing to a valid hosts file.");
+        }
+
         System.setProperty(NettyServerCnxnFactory.PORT_UNIFICATION_KEY, Boolean.TRUE.toString());
         clientX509Util = new ClientX509Util();
         String testDataPath = System.getProperty("test.data.dir", "src/test/resources/data");
