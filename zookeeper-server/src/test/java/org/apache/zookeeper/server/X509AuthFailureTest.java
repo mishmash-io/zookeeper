@@ -43,7 +43,7 @@ public class X509AuthFailureTest extends ZKTestCase {
     public void setup() throws Exception{
         if (!"localhost".equals(InetAddress.getByName("127.0.0.1").getHostName())) {
             throw new Exception("The IP Address 127.0.0.1 does not reverse-resolve to 'localhost'"
-                + " which is required for " + ClientSSLTest.class.getName() + " tests."
+                + " which is required for " + X509AuthFailureTest.class.getName() + " tests."
                 + " Fix OS DNS resoltion or run with -Djdk.net.hosts.file=<file>"
                 + " pointing to a valid hosts file.");
         }
