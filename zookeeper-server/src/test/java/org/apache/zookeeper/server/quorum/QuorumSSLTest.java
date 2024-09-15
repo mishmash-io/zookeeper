@@ -27,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -404,7 +406,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
         if (crlPath != null) {
             DistributionPointName distPointOne = new DistributionPointName(
-                new GeneralNames(new GeneralName(GeneralName.uniformResourceIdentifier, "file://" + crlPath)));
+                new GeneralNames(new GeneralName(GeneralName.uniformResourceIdentifier, new File(crlPath).toURI().toString()/* "file://" + crlPath*/)));
 
             certificateBuilder.addExtension(
                 Extension.cRLDistributionPoints,
@@ -850,8 +852,6 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
         setSSLSystemProperties();
         System.setProperty(quorumX509Util.getSslCrlEnabledProperty(), "true");
-        // java prefers to use OCSP for revocations, disable it for this test
-        Security.setProperty("ocsp.enable", "false");
 
         X509Certificate validCertificate = buildEndEntityCert(
             defaultKeyPair,
@@ -925,8 +925,6 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
             setSSLSystemProperties();
             System.setProperty(quorumX509Util.getSslOcspEnabledProperty(), "true");
-            // make sure OCSP revocation is enabled
-            Security.setProperty("ocsp.enable", "true");
 
             X509Certificate validCertificate = buildEndEntityCert(
                 defaultKeyPair,
