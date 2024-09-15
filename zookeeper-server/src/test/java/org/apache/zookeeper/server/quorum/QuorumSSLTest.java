@@ -27,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -142,27 +144,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
     private static final String PORT_UNIFICATION_DISABLED = "portUnification=false\n";
 
     private static final char[] PASSWORD = "testpass".toCharArray();
-    private static String HOSTNAME;
-
-    static {
-        try {
-            /*
-             * Tests below generate a variety of valid and invalid SSL certificates to make sure
-             * ZooKeeper correctly accepts and rejects incoming SSL connections.
-             * 
-             * Certificate validation (as done by ZkTrustManager) is done on IP address
-             * (127.0.0.1 is used by the tests) and/or the host name 127.0.0.1 reverse-resolves to.
-             * 
-             * As this hostname can vary depending on OS setup (might not be 'localhost'),
-             * try to reverse-resolve it to the correct value, so that valid certificates can be
-             * generated.
-             */
-            HOSTNAME = InetAddress.getByName("127.0.0.1").getHostName();
-        } catch (Exception e) {
-            // If reverse resolution fails, use a default
-            HOSTNAME = "localhost";
-        }
-    }
+    private static final String HOSTNAME = "localhost";
 
     private QuorumX509Util quorumX509Util;
 
@@ -192,6 +174,13 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
     @BeforeEach
     public void setup() throws Exception {
+        if (!HOSTNAME.equals(InetAddress.getByName("127.0.0.1").getHostName())) {
+            throw new Exception("The IP Address 127.0.0.1 does not reverse-resolve to 'localhost'"
+                + " which is required for " + QuorumSSLTest.class.getName() + " tests."
+                + " Fix OS DNS resoltion or run with -Djdk.net.hosts.file=<file>"
+                + " pointing to a valid hosts file.");
+        }
+
         quorumX509Util = new QuorumX509Util();
         ClientBase.setupTestEnv();
 
@@ -404,7 +393,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
         if (crlPath != null) {
             DistributionPointName distPointOne = new DistributionPointName(
-                new GeneralNames(new GeneralName(GeneralName.uniformResourceIdentifier, "file://" + crlPath)));
+                new GeneralNames(new GeneralName(GeneralName.uniformResourceIdentifier, new File(crlPath).toURI().toString()/* "file://" + crlPath*/)));
 
             certificateBuilder.addExtension(
                 Extension.cRLDistributionPoints,
@@ -850,8 +839,6 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
         setSSLSystemProperties();
         System.setProperty(quorumX509Util.getSslCrlEnabledProperty(), "true");
-        // java prefers to use OCSP for revocations, disable it for this test
-        Security.setProperty("ocsp.enable", "false");
 
         X509Certificate validCertificate = buildEndEntityCert(
             defaultKeyPair,
@@ -925,8 +912,6 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
             setSSLSystemProperties();
             System.setProperty(quorumX509Util.getSslOcspEnabledProperty(), "true");
-            // make sure OCSP revocation is enabled
-            Security.setProperty("ocsp.enable", "true");
 
             X509Certificate validCertificate = buildEndEntityCert(
                 defaultKeyPair,
