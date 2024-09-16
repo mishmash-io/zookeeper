@@ -17,6 +17,7 @@
  */
 package org.apache.zookeeper.server;
 
+import java.net.InetAddress;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import org.apache.zookeeper.PortAssignment;
@@ -40,6 +41,13 @@ public class X509AuthFailureTest extends ZKTestCase {
 
     @BeforeEach
     public void setup() throws Exception{
+        if (!"localhost".equals(InetAddress.getByName("127.0.0.1").getHostName())) {
+            throw new Exception("The IP Address 127.0.0.1 does not reverse-resolve to 'localhost'"
+                + " which is required for " + X509AuthFailureTest.class.getName() + " tests."
+                + " Fix OS DNS resoltion or run with -Djdk.net.hosts.file=<file>"
+                + " pointing to a valid hosts file.");
+        }
+
         clientX509Util = new ClientX509Util();
         String testDataPath = System.getProperty("test.data.dir", "src/test/resources/data");
         System.setProperty(ServerCnxnFactory.ZOOKEEPER_SERVER_CNXN_FACTORY, "org.apache.zookeeper.server.NettyServerCnxnFactory");
