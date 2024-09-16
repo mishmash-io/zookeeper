@@ -1,2 +1,4 @@
 127.0.0.1 localhost ${tests.hostname}
 ::1 localhost ${tests.hostname}
+169.254.254.253 multiple-addresses.test.hosts
+169.254.254.254 multiple-addresses.test.hosts

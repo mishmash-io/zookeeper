@@ -137,7 +137,7 @@ public class MultipleAddressesTest {
 
     @Test
     public void testRecreateSocketAddresses() throws UnknownHostException {
-        List<InetSocketAddress> searchedAddresses = Arrays.stream(InetAddress.getAllByName("google.com"))
+        List<InetSocketAddress> searchedAddresses = Arrays.stream(InetAddress.getAllByName("multiple-addresses.test.hosts"))
                 .map(addr -> new InetSocketAddress(addr, 222)).collect(Collectors.toList());
 
         MultipleAddresses multipleAddresses = new MultipleAddresses(searchedAddresses.get(searchedAddresses.size() - 1));
