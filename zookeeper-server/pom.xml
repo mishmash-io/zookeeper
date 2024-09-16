@@ -204,6 +204,15 @@
             </configuration>
           </execution>
           <execution>
+            <id>tbuild-tests-hostname</id>
+            <goals>
+              <goal>hostname</goal>
+            </goals>
+            <configuration>
+              <hostnameProperty>tests.hostname</hostnameProperty>
+            </configuration>
+          </execution>
+          <execution>
             <id>parse-version</id>
             <goals>
               <goal>parse-version</goal>
@@ -242,6 +251,22 @@
               </resources>
             </configuration>
           </execution>
+          <execution>
+            <id>prepare-filtered-test-resource</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>process-test-classes</phase>
+            <configuration>
+              <outputDirectory>${project.build.directory}/generated-test-resources</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/test/resources/filtered</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -273,7 +298,7 @@
           </includes>
           <forkCount>${surefire-forkcount}</forkCount>
           <reuseForks>false</reuseForks>
-          <argLine>-Djdk.net.hosts.file=${project.basedir}/src/test/resources/data/ssl/hosts -Xmx512m -Dtest.junit.threads=${surefire-forkcount} -Dzookeeper.junit.threadid=${surefire.forkNumber} -javaagent:${org.jmockit:jmockit:jar}</argLine>
+          <argLine>-Djdk.net.hosts.file=${project.build.directory}/generated-test-resources/hosts -Xmx512m -Dtest.junit.threads=${surefire-forkcount} -Dzookeeper.junit.threadid=${surefire.forkNumber} -javaagent:${org.jmockit:jmockit:jar}</argLine>
           <basedir>${project.basedir}</basedir>
           <systemPropertyVariables>
             <build.test.dir>${project.build.directory}/surefire</build.test.dir>
