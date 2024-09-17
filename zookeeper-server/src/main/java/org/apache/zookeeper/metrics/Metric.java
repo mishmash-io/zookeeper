@@ -18,28 +18,18 @@
 
 package org.apache.zookeeper.metrics;
 
-/**
- * A generic exception thrown during the licecycle of a MetricsProvider.
- * <p>These exception will prevent the system from booting.</p>
- * <p>Normally these exception will be ignored during shutdown.</p>
- */
-public class MetricsProviderLifeCycleException extends Exception {
+import java.util.Map;
 
-    private static final long serialVersionUID = 1L;
+public abstract class Metric {
 
-    public MetricsProviderLifeCycleException() {
+    public void add(long value) {
     }
-
-    public MetricsProviderLifeCycleException(String message) {
-        super(message);
+    public void add(int key, long value) {
     }
-
-    public MetricsProviderLifeCycleException(String message, Throwable cause) {
-        super(message, cause);
+    public void add(String key, long value) {
     }
-
-    public MetricsProviderLifeCycleException(Throwable cause) {
-        super(cause);
+    public void reset() {
     }
+    public abstract Map<String, Object> values();
 
 }

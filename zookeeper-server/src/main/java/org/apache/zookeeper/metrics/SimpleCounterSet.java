@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.metric;
+package org.apache.zookeeper.metrics;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.zookeeper.metrics.CounterSet;
 
 /**
  * Represent a set of counters identified by different keys.

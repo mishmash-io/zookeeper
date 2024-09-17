@@ -16,12 +16,11 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.metrics.impl;
+package org.apache.zookeeper.metrics.provider;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
-import org.apache.zookeeper.metrics.MetricsProvider;
-import org.apache.zookeeper.metrics.MetricsProviderLifeCycleException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

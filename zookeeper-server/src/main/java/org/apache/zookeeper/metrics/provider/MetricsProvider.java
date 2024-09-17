@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.metrics;
+package org.apache.zookeeper.metrics.provider;
 
 import java.util.Properties;
 import java.util.function.BiConsumer;

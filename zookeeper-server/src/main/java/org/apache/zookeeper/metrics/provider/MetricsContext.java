@@ -16,7 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.metrics;
+package org.apache.zookeeper.metrics.provider;
+
+import org.apache.zookeeper.metrics.Counter;
+import org.apache.zookeeper.metrics.CounterSet;
+import org.apache.zookeeper.metrics.Gauge;
+import org.apache.zookeeper.metrics.GaugeSet;
+import org.apache.zookeeper.metrics.Summary;
+import org.apache.zookeeper.metrics.SummarySet;
 
 /**
  * A MetricsContext is like a namespace for metrics. Each component/submodule

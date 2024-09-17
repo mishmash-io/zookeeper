@@ -16,20 +16,40 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.metric;
+package org.apache.zookeeper.metrics;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
-public abstract class Metric {
+public class SimpleCounter extends Metric implements Counter {
 
+    private final String name;
+    private final AtomicLong counter = new AtomicLong();
+
+    public SimpleCounter(String name) {
+        this.name = name;
+    }
+
+    @Override
     public void add(long value) {
+        counter.addAndGet(value);
     }
-    public void add(int key, long value) {
-    }
-    public void add(String key, long value) {
-    }
+
+    @Override
     public void reset() {
+        counter.set(0);
     }
-    public abstract Map<String, Object> values();
+
+    public long get() {
+        return counter.get();
+    }
+
+    @Override
+    public Map<String, Object> values() {
+        Map<String, Object> m = new LinkedHashMap<String, Object>();
+        m.put(name, this.get());
+        return m;
+    }
 
 }

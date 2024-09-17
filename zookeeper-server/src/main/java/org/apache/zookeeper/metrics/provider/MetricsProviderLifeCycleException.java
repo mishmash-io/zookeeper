@@ -16,41 +16,30 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.metric;
+package org.apache.zookeeper.metrics.provider;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-import org.apache.zookeeper.metrics.Counter;
+/**
+ * A generic exception thrown during the licecycle of a MetricsProvider.
+ * <p>These exception will prevent the system from booting.</p>
+ * <p>Normally these exception will be ignored during shutdown.</p>
+ */
+public class MetricsProviderLifeCycleException extends Exception {
 
-public class SimpleCounter extends Metric implements Counter {
+    private static final long serialVersionUID = 1L;
 
-    private final String name;
-    private final AtomicLong counter = new AtomicLong();
-
-    public SimpleCounter(String name) {
-        this.name = name;
+    public MetricsProviderLifeCycleException() {
     }
 
-    @Override
-    public void add(long value) {
-        counter.addAndGet(value);
+    public MetricsProviderLifeCycleException(String message) {
+        super(message);
     }
 
-    @Override
-    public void reset() {
-        counter.set(0);
+    public MetricsProviderLifeCycleException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public long get() {
-        return counter.get();
-    }
-
-    @Override
-    public Map<String, Object> values() {
-        Map<String, Object> m = new LinkedHashMap<String, Object>();
-        m.put(name, this.get());
-        return m;
+    public MetricsProviderLifeCycleException(Throwable cause) {
+        super(cause);
     }
 
 }

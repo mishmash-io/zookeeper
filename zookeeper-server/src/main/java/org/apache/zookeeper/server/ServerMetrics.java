@@ -20,13 +20,13 @@ package org.apache.zookeeper.server;
 
 import org.apache.zookeeper.metrics.Counter;
 import org.apache.zookeeper.metrics.CounterSet;
-import org.apache.zookeeper.metrics.MetricsContext;
-import org.apache.zookeeper.metrics.MetricsContext.DetailLevel;
-import org.apache.zookeeper.metrics.MetricsProvider;
 import org.apache.zookeeper.metrics.Summary;
 import org.apache.zookeeper.metrics.SummarySet;
-import org.apache.zookeeper.metrics.impl.DefaultMetricsProvider;
-import org.apache.zookeeper.metrics.impl.NullMetricsProvider;
+import org.apache.zookeeper.metrics.provider.DefaultMetricsProvider;
+import org.apache.zookeeper.metrics.provider.MetricsContext;
+import org.apache.zookeeper.metrics.provider.MetricsProvider;
+import org.apache.zookeeper.metrics.provider.NullMetricsProvider;
+import org.apache.zookeeper.metrics.provider.MetricsContext.DetailLevel;
 import org.apache.zookeeper.server.util.QuotaMetricsUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

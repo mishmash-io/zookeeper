@@ -32,7 +32,7 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.common.ClientX509Util;
-import org.apache.zookeeper.server.metric.SimpleCounter;
+import org.apache.zookeeper.metrics.SimpleCounter;
 import org.apache.zookeeper.test.ClientBase;
 import org.apache.zookeeper.test.SSLAuthTest;
 import org.hamcrest.Matchers;

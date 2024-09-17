@@ -16,28 +16,26 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.metrics.impl;
+package org.apache.zookeeper.metrics.provider;
 
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
+
+import org.apache.zookeeper.metrics.AvgMinMaxCounter;
+import org.apache.zookeeper.metrics.AvgMinMaxCounterSet;
+import org.apache.zookeeper.metrics.AvgMinMaxPercentileCounter;
+import org.apache.zookeeper.metrics.AvgMinMaxPercentileCounterSet;
 import org.apache.zookeeper.metrics.Counter;
 import org.apache.zookeeper.metrics.CounterSet;
 import org.apache.zookeeper.metrics.Gauge;
 import org.apache.zookeeper.metrics.GaugeSet;
-import org.apache.zookeeper.metrics.MetricsContext;
-import org.apache.zookeeper.metrics.MetricsProvider;
-import org.apache.zookeeper.metrics.MetricsProviderLifeCycleException;
+import org.apache.zookeeper.metrics.SimpleCounter;
+import org.apache.zookeeper.metrics.SimpleCounterSet;
 import org.apache.zookeeper.metrics.Summary;
 import org.apache.zookeeper.metrics.SummarySet;
-import org.apache.zookeeper.server.metric.AvgMinMaxCounter;
-import org.apache.zookeeper.server.metric.AvgMinMaxCounterSet;
-import org.apache.zookeeper.server.metric.AvgMinMaxPercentileCounter;
-import org.apache.zookeeper.server.metric.AvgMinMaxPercentileCounterSet;
-import org.apache.zookeeper.server.metric.SimpleCounter;
-import org.apache.zookeeper.server.metric.SimpleCounterSet;
 
 /**
  * Default implementation of {@link MetricsProvider}.<br>

@@ -20,6 +20,8 @@ package org.apache.zookeeper.metrics;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.zookeeper.metrics.provider.MetricsProvider;
 import org.apache.zookeeper.server.ServerMetrics;
 
 /**

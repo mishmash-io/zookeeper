@@ -16,36 +16,29 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.metric;
+package org.apache.zookeeper.metrics;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.zookeeper.metrics.SummarySet;
 
 /**
  * Generic set of long counters that keep track of min/max/avg
  * for different keys.
  * The counter is thread-safe
  */
-public class AvgMinMaxPercentileCounterSet extends Metric implements SummarySet {
+public class AvgMinMaxCounterSet extends Metric implements SummarySet {
 
     private final String name;
 
-    private ConcurrentHashMap<String, AvgMinMaxPercentileCounter> counters = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, AvgMinMaxCounter> counters = new ConcurrentHashMap<>();
 
-    public AvgMinMaxPercentileCounterSet(String name) {
+    public AvgMinMaxCounterSet(String name) {
         this.name = name;
     }
 
-    private AvgMinMaxPercentileCounter getCounterForKey(String key) {
-        AvgMinMaxPercentileCounter counter = counters.get(key);
-        if (counter == null) {
-            counters.putIfAbsent(key, new AvgMinMaxPercentileCounter(key + "_" + name));
-            counter = counters.get(key);
-        }
-
-        return counter;
+    private AvgMinMaxCounter getCounterForKey(String key) {
+        return counters.computeIfAbsent(key, k-> new AvgMinMaxCounter(k + "_" + name));
     }
 
     public void addDataPoint(String key, long value) {
@@ -53,13 +46,13 @@ public class AvgMinMaxPercentileCounterSet extends Metric implements SummarySet 
     }
 
     public void resetMax() {
-        for (Map.Entry<String, AvgMinMaxPercentileCounter> entry : counters.entrySet()) {
+        for (Map.Entry<String, AvgMinMaxCounter> entry : counters.entrySet()) {
             entry.getValue().resetMax();
         }
     }
 
     public void reset() {
-        for (Map.Entry<String, AvgMinMaxPercentileCounter> entry : counters.entrySet()) {
+        for (Map.Entry<String, AvgMinMaxCounter> entry : counters.entrySet()) {
             entry.getValue().reset();
         }
     }
@@ -72,7 +65,7 @@ public class AvgMinMaxPercentileCounterSet extends Metric implements SummarySet 
     @Override
     public Map<String, Object> values() {
         Map<String, Object> m = new LinkedHashMap<>();
-        for (Map.Entry<String, AvgMinMaxPercentileCounter> entry : counters.entrySet()) {
+        for (Map.Entry<String, AvgMinMaxCounter> entry : counters.entrySet()) {
             m.putAll(entry.getValue().values());
         }
         return m;

@@ -22,7 +22,11 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
-import org.apache.zookeeper.metrics.impl.NullMetricsProvider;
+
+import org.apache.zookeeper.metrics.provider.MetricsContext;
+import org.apache.zookeeper.metrics.provider.MetricsProvider;
+import org.apache.zookeeper.metrics.provider.MetricsProviderLifeCycleException;
+import org.apache.zookeeper.metrics.provider.NullMetricsProvider;
 
 /**
  * Simple MetricsProvider for tests.

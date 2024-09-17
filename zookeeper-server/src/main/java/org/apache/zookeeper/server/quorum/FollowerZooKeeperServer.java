@@ -24,7 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import javax.management.JMException;
 import org.apache.jute.Record;
 import org.apache.zookeeper.jmx.MBeanRegistry;
-import org.apache.zookeeper.metrics.MetricsContext;
+import org.apache.zookeeper.metrics.provider.MetricsContext;
 import org.apache.zookeeper.server.FinalRequestProcessor;
 import org.apache.zookeeper.server.Request;
 import org.apache.zookeeper.server.RequestProcessor;

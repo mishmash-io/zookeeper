@@ -16,14 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.metric;
+package org.apache.zookeeper.metrics;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import org.apache.zookeeper.metrics.Summary;
 
 /**
  * Generic long counter that keep track of min/max/avg. The counter is

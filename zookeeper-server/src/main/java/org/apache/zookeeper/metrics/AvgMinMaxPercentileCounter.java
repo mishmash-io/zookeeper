@@ -16,20 +16,18 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.metric;
+package org.apache.zookeeper.metrics;
 
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Reservoir;
-import com.codahale.metrics.Snapshot;
-import com.codahale.metrics.UniformSnapshot;
+import static java.lang.Math.floor;
+
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
-import org.apache.zookeeper.metrics.Summary;
 
 /**
  * Generic long counter that keep track of min/max/avg/percentiles.
@@ -40,9 +38,8 @@ public class AvgMinMaxPercentileCounter extends Metric implements Summary {
     private final String name;
     private final AvgMinMaxCounter counter;
     private final ResettableUniformReservoir reservoir;
-    private final Histogram histogram;
 
-    static class ResettableUniformReservoir implements Reservoir {
+    static class ResettableUniformReservoir {
 
         private static final int DEFAULT_SIZE = 4096;
         private static final int BITS_PER_LONG = 63;
@@ -50,7 +47,6 @@ public class AvgMinMaxPercentileCounter extends Metric implements Summary {
         private final AtomicLong count = new AtomicLong();
         private volatile AtomicLongArray values = new AtomicLongArray(DEFAULT_SIZE);
 
-        @Override
         public int size() {
             final long c = count.get();
             if (c > values.length()) {
@@ -59,7 +55,6 @@ public class AvgMinMaxPercentileCounter extends Metric implements Summary {
             return (int) c;
         }
 
-        @Override
         public void update(long value) {
             final long c = count.incrementAndGet();
             if (c <= values.length()) {
@@ -81,14 +76,13 @@ public class AvgMinMaxPercentileCounter extends Metric implements Summary {
             return val;
         }
 
-        @Override
         public Snapshot getSnapshot() {
             final int s = size();
             final List<Long> copy = new ArrayList<Long>(s);
             for (int i = 0; i < s; i++) {
                 copy.add(values.get(i));
             }
-            return new UniformSnapshot(copy);
+            return new Snapshot(copy);
         }
 
         public void reset() {
@@ -98,17 +92,74 @@ public class AvgMinMaxPercentileCounter extends Metric implements Summary {
 
     }
 
+    static class Snapshot {
+        private long[] values;
+
+        public Snapshot(Collection<Long> col) {
+            values = col.stream().mapToLong(l -> l.longValue()).sorted().toArray();
+        }
+
+        public double getValue(double quantile) {
+            if (quantile < 0.0 || quantile > 1.0 || Double.isNaN(quantile)) {
+                throw new IllegalArgumentException(quantile + " is not in [0..1]");
+            }
+
+            if (values.length == 0) {
+                return 0.0;
+            }
+
+            double pos = quantile * (values.length + 1);
+            int index = (int) pos;
+
+            if (index < 1) {
+                return values[0];
+            }
+
+            if (index >= values.length) {
+                return values[values.length - 1];
+            }
+
+            double lower = values[index - 1];
+            double upper = values[index];
+
+            return lower + (pos - floor(pos)) * (upper - lower);
+        }
+
+        public double getMedian() {
+            return getValue(0.5);
+        }
+
+        public double get75thPercentile() {
+            return getValue(0.75);
+        }
+
+        public double get95thPercentile() {
+            return getValue(0.95);
+        }
+
+        public double get98thPercentile() {
+            return getValue(0.98);
+        }
+
+        public double get99thPercentile() {
+            return getValue(0.99);
+        }
+
+        public double get999thPercentile() {
+            return getValue(0.999);
+        }
+    }
+
     public AvgMinMaxPercentileCounter(String name) {
 
         this.name = name;
         this.counter = new AvgMinMaxCounter(this.name);
         reservoir = new ResettableUniformReservoir();
-        histogram = new Histogram(reservoir);
     }
 
     public void addDataPoint(long value) {
         counter.add(value);
-        histogram.update(value);
+        reservoir.update(value);
     }
 
     public void resetMax() {
@@ -128,10 +179,12 @@ public class AvgMinMaxPercentileCounter extends Metric implements Summary {
     public Map<String, Object> values() {
         Map<String, Object> m = new LinkedHashMap<>();
         m.putAll(counter.values());
-        m.put("p50_" + name, Math.round(this.histogram.getSnapshot().getMedian()));
-        m.put("p95_" + name, Math.round(this.histogram.getSnapshot().get95thPercentile()));
-        m.put("p99_" + name, Math.round(this.histogram.getSnapshot().get99thPercentile()));
-        m.put("p999_" + name, Math.round(this.histogram.getSnapshot().get999thPercentile()));
+        
+        Snapshot s = reservoir.getSnapshot();
+        m.put("p50_" + name, Math.round(s.getMedian()));
+        m.put("p95_" + name, Math.round(s.get95thPercentile()));
+        m.put("p99_" + name, Math.round(s.get99thPercentile()));
+        m.put("p999_" + name, Math.round(s.get999thPercentile()));
         return m;
     }
 

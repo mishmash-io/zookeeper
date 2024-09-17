@@ -30,7 +30,7 @@ import org.apache.zookeeper.MultiOperationRecord;
 import org.apache.zookeeper.Op;
 import org.apache.zookeeper.ZooDefs.OpCode;
 import org.apache.zookeeper.common.ByteBufferInputStream;
-import org.apache.zookeeper.metrics.MetricsContext;
+import org.apache.zookeeper.metrics.provider.MetricsContext;
 import org.apache.zookeeper.proto.CreateRequest;
 import org.apache.zookeeper.server.Request;
 import org.apache.zookeeper.server.ServerMetrics;

@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.metric;
+package org.apache.zookeeper.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.Map;
 import org.apache.zookeeper.ZKTestCase;
+import org.apache.zookeeper.metrics.SimpleCounterSet;
 import org.junit.jupiter.api.Test;
 
 
