@@ -290,7 +290,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
                 }
 
                 X509CertificateHolder[] chain = new X509CertificateHolder[]{new JcaX509CertificateHolder(rootCertificate)};
-                ContentSigner signer = new JcaContentSignerBuilder("SHA1withRSA").setProvider("BC").build(rootKeyPair.getPrivate());
+                ContentSigner signer = new JcaContentSignerBuilder("SHA256withRSA").setProvider("BC").build(rootKeyPair.getPrivate());
                 BasicOCSPResp ocspResponse = responseBuilder.build(signer, chain, Calendar.getInstance().getTime());
                 LOG.info("response {}", ocspResponse);
                 responseBytes = new OCSPRespBuilder().build(OCSPRespBuilder.SUCCESSFUL, ocspResponse).getEncoded();
