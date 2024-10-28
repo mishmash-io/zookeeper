@@ -38,7 +38,7 @@ import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZKTestCase;
 import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.common.PathUtils;
-import org.apache.zookeeper.server.admin.JettyAdminServer;
+import org.apache.zookeeper.server.admin.jetty.JettyAdminServer;
 import org.apache.zookeeper.test.ClientBase;
 import org.apache.zookeeper.test.QuorumBase;
 import org.junit.jupiter.api.AfterEach;

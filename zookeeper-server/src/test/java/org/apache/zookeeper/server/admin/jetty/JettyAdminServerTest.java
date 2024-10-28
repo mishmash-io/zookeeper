@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.admin;
+package org.apache.zookeeper.server.admin.jetty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,6 +48,7 @@ import org.apache.zookeeper.common.X509KeyType;
 import org.apache.zookeeper.common.X509TestContext;
 import org.apache.zookeeper.server.ZooKeeperServerMainTest;
 import org.apache.zookeeper.server.admin.AdminServer.AdminServerException;
+import org.apache.zookeeper.server.admin.jetty.JettyAdminServer;
 import org.apache.zookeeper.server.quorum.QuorumPeerTestBase;
 import org.apache.zookeeper.test.ClientBase;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

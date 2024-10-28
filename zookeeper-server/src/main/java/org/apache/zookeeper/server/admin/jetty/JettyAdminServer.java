@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.admin;
+package org.apache.zookeeper.server.admin.jetty;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -33,6 +33,8 @@ import org.apache.zookeeper.common.QuorumX509Util;
 import org.apache.zookeeper.common.SecretUtils;
 import org.apache.zookeeper.common.X509Util;
 import org.apache.zookeeper.server.ZooKeeperServer;
+import org.apache.zookeeper.server.admin.AdminServer;
+import org.apache.zookeeper.server.admin.AdminServer.AdminServerException;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;

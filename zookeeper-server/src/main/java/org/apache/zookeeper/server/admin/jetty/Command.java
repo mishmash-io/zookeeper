@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.admin;
+package org.apache.zookeeper.server.admin.jetty;
 
 import java.util.Map;
 import java.util.Set;

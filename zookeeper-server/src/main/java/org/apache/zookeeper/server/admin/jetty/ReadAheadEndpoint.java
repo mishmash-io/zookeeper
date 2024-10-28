@@ -19,7 +19,7 @@
 // This code was found and refactored from here:
 // https://stackoverflow.com/questions/11182192/how-do-i-serve-https-and-http-for-jetty-from-one-port/40076056#40076056
 
-package org.apache.zookeeper.server.admin;
+package org.apache.zookeeper.server.admin.jetty;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

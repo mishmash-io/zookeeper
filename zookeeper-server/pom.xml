@@ -358,6 +358,38 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-testCompile</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <!--
+                exclude the following tests, because the following properties of 
+                org.apache.zookeeper.EphemeralType are not public and cannot be 
+                accessed from another package:
+                  - EXTENDED_TYPES_ENABLED_PROPERTY
+                  - TTL_3_5_3_EMULATION_PROPERTY
+                
+              -->
+              <testExcludes>
+                <exclude>**/CreateTTLTest.java</exclude>
+                <exclude>**/EphemeralTypeTest.java</exclude>
+                <exclude>**/Emulate353TTLTest.java</exclude>
+                <exclude>**/NettyNettySuiteHammerTest.java</exclude>
+                <exclude>**/NettyNettySuiteTest.java</exclude>
+                <exclude>**/NioNettySuiteHammerTest.java</exclude>
+                <exclude>**/NioNettySuiteTest.java</exclude>
+              </testExcludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
      </plugins>
   </build>
 

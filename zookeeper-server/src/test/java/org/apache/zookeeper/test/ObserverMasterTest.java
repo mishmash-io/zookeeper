@@ -56,7 +56,7 @@ import org.apache.zookeeper.admin.ZooKeeperAdmin;
 import org.apache.zookeeper.jmx.MBeanRegistry;
 import org.apache.zookeeper.jmx.ZKMBeanInfo;
 import org.apache.zookeeper.metrics.MetricsUtils;
-import org.apache.zookeeper.server.admin.Commands;
+import org.apache.zookeeper.server.admin.jetty.Commands;
 import org.apache.zookeeper.server.quorum.QuorumPeerConfig;
 import org.apache.zookeeper.server.util.PortForwarder;
 import org.junit.jupiter.api.Disabled;
