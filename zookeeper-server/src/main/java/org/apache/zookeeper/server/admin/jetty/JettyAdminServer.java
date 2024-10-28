@@ -25,28 +25,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.zookeeper.common.QuorumX509Util;
 import org.apache.zookeeper.common.SecretUtils;
 import org.apache.zookeeper.common.X509Util;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.admin.AdminServer;
-import org.apache.zookeeper.server.admin.AdminServer.AdminServerException;
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.security.ConstraintMapping;
-import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
+import org.eclipse.jetty.ee10.servlet.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.server.DetectorConnectionFactory;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.SecureRequestCustomizer;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.SslConnectionFactory;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.security.Constraint;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,7 +145,7 @@ public class JettyAdminServer implements AdminServer {
                     throw e;
                 }
 
-                SslContextFactory sslContextFactory = new SslContextFactory.Server();
+                SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
                 sslContextFactory.setKeyStore(keyStore);
                 sslContextFactory.setKeyStorePassword(privateKeyPassword);
                 sslContextFactory.setTrustStore(trustStore);
@@ -158,7 +158,8 @@ public class JettyAdminServer implements AdminServer {
                 } else {
                     connector = new ServerConnector(
                             server,
-                            new UnifiedConnectionFactory(sslContextFactory, HttpVersion.fromVersion(httpVersion).asString()),
+                            new DetectorConnectionFactory(
+                                    new SslConnectionFactory(sslContextFactory, HttpVersion.fromVersion(httpVersion).asString())),
                             new HttpConnectionFactory(config));
                 }
             }
@@ -284,11 +285,8 @@ public class JettyAdminServer implements AdminServer {
      * @param ctxHandler the context to modify
      */
     private void constrainTraceMethod(ServletContextHandler ctxHandler) {
-        Constraint c = new Constraint();
-        c.setAuthenticate(true);
-
         ConstraintMapping cmt = new ConstraintMapping();
-        cmt.setConstraint(c);
+        cmt.setConstraint(Constraint.ANY_USER);
         cmt.setMethod("TRACE");
         cmt.setPathSpec("/*");
 
