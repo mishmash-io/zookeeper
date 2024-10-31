@@ -157,16 +157,18 @@ public class ZooKeeperServerControllerEndToEndTest extends ControllerTestBase {
 
         initClient(watcher);
         watcher.waitForEvent();
-        timedTransaction();
+        long normal = timedTransaction();
 
-        // Add 200 ms of delay to each response.
-        assertTrue(commandClient.trySendCommand(ControlCommand.Action.ADDDELAY, String.valueOf(200)));
+        // Add delay of '50 times the normal' ms to each response.
+        assertTrue(commandClient.trySendCommand(ControlCommand.Action.ADDDELAY, String.valueOf(50 * normal)));
         long delayedDuration = timedTransaction();
 
         assertTrue(commandClient.trySendCommand(ControlCommand.Action.RESET));
         long resetDuration = timedTransaction();
 
-        assertTrue(delayedDuration - resetDuration > 200);
+        // Assert that delayedDuration and resetDuration are massively disproportionate
+        assertTrue(delayedDuration >= 50 * normal);
+        assertTrue(resetDuration < 3 * normal);
     }
 
     @Test
