@@ -31,6 +31,13 @@ public class ZooKeeperSaslServer {
 
     public static final String LOGIN_CONTEXT_NAME_KEY = "zookeeper.sasl.serverconfig";
     public static final String DEFAULT_LOGIN_CONTEXT_NAME = "Server";
+    /**
+     * Configures a SASL mechanism.
+     *
+     * If not set will use the default 'DIGEST-MD5' when no Principal is present on the
+     * logged in Subject; or 'GSSAPI' (Kerberos) if a Principal is present.
+     */
+    public static final String SASL_MECHANISM_NAME = "zookeeper.sasl.server.mechanism";
 
     private static final Logger LOG = LoggerFactory.getLogger(ZooKeeperSaslServer.class);
     private SaslServer saslServer;
@@ -42,7 +49,13 @@ public class ZooKeeperSaslServer {
     private SaslServer createSaslServer(final Login login) {
         synchronized (login) {
             Subject subject = login.getSubject();
-            return SecurityUtils.createSaslServer(subject, "zookeeper", "zk-sasl-md5", login.callbackHandler, LOG);
+            return SecurityUtils.createSaslServer(
+                    subject,
+                    "zookeeper",
+                    "zk-sasl-md5",
+                    login.callbackHandler,
+                    LOG,
+                    System.getProperty(SASL_MECHANISM_NAME));
         }
     }
 

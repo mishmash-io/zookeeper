@@ -31,6 +31,14 @@ import org.apache.zookeeper.common.ZKConfig;
 @InterfaceAudience.Public
 public class ZKClientConfig extends ZKConfig {
 
+    /**
+     * Controls the SASL mechanism used by the client.
+     *
+     * If a system property by that name is not configured, the client will use
+     * 'DIGEST-MD5' (when no Principal is provided by the JAAS LoginModule) and
+     * will use Kerberos ('GSSAPI') (when a Principal is provided).
+     */
+    public static final String ZK_SASL_CLIENT_MECHANISM = "zookeeper.sasl.client.mechanism";
     public static final String ZK_SASL_CLIENT_USERNAME = "zookeeper.sasl.client.username";
     public static final String ZK_SASL_CLIENT_USERNAME_DEFAULT = "zookeeper";
     public static final String ZK_SASL_CLIENT_CANONICALIZE_HOSTNAME = "zookeeper.sasl.client.canonicalize.hostname";

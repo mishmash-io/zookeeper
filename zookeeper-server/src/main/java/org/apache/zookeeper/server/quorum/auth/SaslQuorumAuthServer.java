@@ -87,7 +87,8 @@ public class SaslQuorumAuthServer implements QuorumAuthServer {
                 QuorumAuth.QUORUM_SERVER_PROTOCOL_NAME,
                 QuorumAuth.QUORUM_SERVER_SASL_DIGEST,
                 serverLogin.callbackHandler,
-                LOG);
+                LOG,
+                null);
             while (!ss.isComplete()) {
                 challenge = ss.evaluateResponse(token);
                 if (!ss.isComplete()) {
