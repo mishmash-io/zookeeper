@@ -153,12 +153,12 @@ public final class SecurityUtils {
                             entity,
                             clientPrincipal.getName(),
                             protocol,
-                            serverName);
+                            servicePrincipal);
                     SaslClient client = Sasl.createSaslClient(
                             mechs,
                             clientPrincipal.getName(),
                             protocol,
-                            serverName,
+                            servicePrincipal,
                             null,
                             new SaslClientCallbackHandler(null, entity));
                     return client;
