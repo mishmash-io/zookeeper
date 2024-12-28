@@ -149,7 +149,7 @@ public final class SecurityUtils {
                 action = () -> {
                     LOG.info("{} will use {} as SASL mechanism.", entity, mechs[0]);
                     LOG.debug(
-                            "creating sasl client: {}={};service={};serviceHostname={}",
+                            "creating sasl client: {}={};protocol={};servicePrincipal={}",
                             entity,
                             clientPrincipal.getName(),
                             protocol,
