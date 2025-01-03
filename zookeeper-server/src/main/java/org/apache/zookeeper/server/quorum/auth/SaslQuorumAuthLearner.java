@@ -96,7 +96,7 @@ public class SaslQuorumAuthLearner implements QuorumAuthLearner {
                 QuorumAuth.QUORUM_SERVER_SASL_DIGEST,
                 LOG,
                 "QuorumLearner",
-                null);
+                System.getProperty(QuorumAuth.QUORUM_SASL_AUTH_MECHANISM));
 
             if (sc.hasInitialResponse()) {
                 responseToken = createSaslToken(new byte[0], sc, learnerLogin);

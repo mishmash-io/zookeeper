@@ -30,6 +30,7 @@ public class QuorumAuth {
     private static final Logger LOG = LoggerFactory.getLogger(QuorumAuth.class);
 
     public static final String QUORUM_SASL_AUTH_ENABLED = "quorum.auth.enableSasl";
+    public static final String QUORUM_SASL_AUTH_MECHANISM = "quorum.auth.sasl.mechanism";
     public static final String QUORUM_SERVER_SASL_AUTH_REQUIRED = "quorum.auth.serverRequireSasl";
     public static final String QUORUM_LEARNER_SASL_AUTH_REQUIRED = "quorum.auth.learnerRequireSasl";
 
