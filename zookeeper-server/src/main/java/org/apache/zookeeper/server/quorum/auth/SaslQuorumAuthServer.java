@@ -45,9 +45,11 @@ public class SaslQuorumAuthServer implements QuorumAuthServer {
     private static final int MAX_RETRIES = 5;
     private final Login serverLogin;
     private final boolean quorumRequireSasl;
+    private final String mechanism;
 
-    public SaslQuorumAuthServer(boolean quorumRequireSasl, String loginContextKey, String loginContext, Set<String> authzHosts) throws SaslException {
+    public SaslQuorumAuthServer(boolean quorumRequireSasl, String loginContextKey, String loginContext, Set<String> authzHosts, String saslMechanism) throws SaslException {
         this.quorumRequireSasl = quorumRequireSasl;
+        this.mechanism = saslMechanism;
         try {
             AppConfigurationEntry[] entries = Configuration.getConfiguration().getAppConfigurationEntry(loginContext);
             if (entries == null || entries.length == 0) {
@@ -88,7 +90,7 @@ public class SaslQuorumAuthServer implements QuorumAuthServer {
                 QuorumAuth.QUORUM_SERVER_SASL_DIGEST,
                 serverLogin.callbackHandler,
                 LOG,
-                System.getProperty(QuorumAuth.QUORUM_SASL_AUTH_MECHANISM));
+                mechanism);
             while (!ss.isComplete()) {
                 challenge = ss.evaluateResponse(token);
                 if (!ss.isComplete()) {

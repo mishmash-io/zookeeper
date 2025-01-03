@@ -118,6 +118,7 @@ public class QuorumPeerConfig {
     protected boolean quorumServerRequireSasl = false;
     protected boolean quorumLearnerRequireSasl = false;
     protected boolean quorumEnableSasl = false;
+    protected String quorumSaslMechanism = null;
     protected String quorumServicePrincipal = QuorumAuth.QUORUM_KERBEROS_SERVICE_PRINCIPAL_DEFAULT_VALUE;
     protected String quorumLearnerLoginContext = QuorumAuth.QUORUM_LEARNER_SASL_LOGIN_CONTEXT_DFAULT_VALUE;
     protected String quorumServerLoginContext = QuorumAuth.QUORUM_SERVER_SASL_LOGIN_CONTEXT_DFAULT_VALUE;
@@ -349,6 +350,8 @@ public class QuorumPeerConfig {
                 quorumLearnerLoginContext = value;
             } else if (key.equals(QuorumAuth.QUORUM_SERVER_SASL_LOGIN_CONTEXT)) {
                 quorumServerLoginContext = value;
+            } else if (key.equals(QuorumAuth.QUORUM_SASL_AUTH_MECHANISM)) {
+                quorumSaslMechanism = value;
             } else if (key.equals(QuorumAuth.QUORUM_KERBEROS_SERVICE_PRINCIPAL)) {
                 quorumServicePrincipal = value;
             } else if (key.equals("quorum.cnxn.threads.size")) {

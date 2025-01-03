@@ -136,7 +136,7 @@ public class ZooKeeperSaslClient {
         }
         if (entries != null) {
             this.configStatus = "Will attempt to SASL-authenticate using Login Context section '" + clientSection + "'";
-            this.saslClient = createSaslClient(serverPrincipal, ZKClientConfig.LOGIN_CONTEXT_NAME_KEY, clientSection);
+            this.saslClient = createSaslClient(serverPrincipal, ZKClientConfig.LOGIN_CONTEXT_NAME_KEY, clientSection, clientConfig.getProperty(ZKClientConfig.ZK_SASL_CLIENT_MECHANISM));
         } else {
             // Handle situation of clientSection's being null: it might simply because the client does not intend to
             // use SASL, so not necessarily an error.
@@ -235,7 +235,8 @@ public class ZooKeeperSaslClient {
     private SaslClient createSaslClient(
         final String servicePrincipal,
         final String loginContextKey,
-        final String loginContext) throws LoginException {
+        final String loginContext,
+        final String mechanism) throws LoginException {
         try {
             if (!initializedLogin) {
                 synchronized (this) {
@@ -256,7 +257,7 @@ public class ZooKeeperSaslClient {
                     "zk-sasl-md5",
                     LOG,
                     "Client",
-                    System.getProperty(ZKClientConfig.ZK_SASL_CLIENT_MECHANISM));
+                    mechanism);
         } catch (LoginException e) {
             // We throw LoginExceptions...
             throw e;

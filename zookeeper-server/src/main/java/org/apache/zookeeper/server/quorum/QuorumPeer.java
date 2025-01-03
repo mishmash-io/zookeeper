@@ -752,6 +752,12 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
     protected boolean quorumSaslEnableAuth;
 
     /**
+     * Sets the Sasl mechanism. Default to null, which means kerberos or md5,
+     * depending on login configuration.
+     */
+    protected String quorumSaslMechanism;
+
+    /**
      * If this is false, quorum peer server will accept another quorum peer client
      * connection even if the authentication did not succeed. This can be used while
      * upgrading ZooKeeper server. Defaulting to false (required).
@@ -1112,8 +1118,8 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             for (QuorumServer qs : getView().values()) {
                 authzHosts.add(qs.hostname);
             }
-            authServer = new SaslQuorumAuthServer(isQuorumServerSaslAuthRequired(), QuorumAuth.QUORUM_SERVER_SASL_LOGIN_CONTEXT, quorumServerLoginContext, authzHosts);
-            authLearner = new SaslQuorumAuthLearner(isQuorumLearnerSaslAuthRequired(), quorumServicePrincipal, QuorumAuth.QUORUM_LEARNER_SASL_LOGIN_CONTEXT, quorumLearnerLoginContext);
+            authServer = new SaslQuorumAuthServer(isQuorumServerSaslAuthRequired(), QuorumAuth.QUORUM_SERVER_SASL_LOGIN_CONTEXT, quorumServerLoginContext, authzHosts, quorumSaslMechanism);
+            authLearner = new SaslQuorumAuthLearner(isQuorumLearnerSaslAuthRequired(), quorumServicePrincipal, QuorumAuth.QUORUM_LEARNER_SASL_LOGIN_CONTEXT, quorumLearnerLoginContext, quorumSaslMechanism);
         } else {
             authServer = new NullQuorumAuthServer();
             authLearner = new NullQuorumAuthLearner();
@@ -2552,6 +2558,11 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         }
     }
 
+    void setQuorumSaslMechanism(String mechanism) {
+        quorumSaslMechanism = mechanism;
+        LOG.info("{} set to {}", QuorumAuth.QUORUM_SASL_AUTH_MECHANISM, mechanism);
+    }
+
     void setQuorumServicePrincipal(String servicePrincipal) {
         quorumServicePrincipal = servicePrincipal;
         LOG.info("{} set to {}", QuorumAuth.QUORUM_KERBEROS_SERVICE_PRINCIPAL, quorumServicePrincipal);
@@ -2675,6 +2686,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             quorumPeer.setQuorumServicePrincipal(config.quorumServicePrincipal);
             quorumPeer.setQuorumServerLoginContext(config.quorumServerLoginContext);
             quorumPeer.setQuorumLearnerLoginContext(config.quorumLearnerLoginContext);
+            quorumPeer.setQuorumSaslMechanism(config.quorumSaslMechanism);
         }
         quorumPeer.setQuorumCnxnThreadsSize(config.quorumCnxnThreadsSize);
 

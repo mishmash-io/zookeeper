@@ -48,14 +48,17 @@ public class SaslQuorumAuthLearner implements QuorumAuthLearner {
     private final Login learnerLogin;
     private final boolean quorumRequireSasl;
     private final String quorumServicePrincipal;
+    private final String mechanism;
 
     public SaslQuorumAuthLearner(
         boolean quorumRequireSasl,
         String quorumServicePrincipal,
         String loginContextKey,
-        String loginContext) throws SaslException {
+        String loginContext,
+        String saslMechanism) throws SaslException {
         this.quorumRequireSasl = quorumRequireSasl;
         this.quorumServicePrincipal = quorumServicePrincipal;
+        this.mechanism = saslMechanism;
         try {
             AppConfigurationEntry[] entries = Configuration.getConfiguration().getAppConfigurationEntry(loginContext);
             if (entries == null || entries.length == 0) {
@@ -96,7 +99,7 @@ public class SaslQuorumAuthLearner implements QuorumAuthLearner {
                 QuorumAuth.QUORUM_SERVER_SASL_DIGEST,
                 LOG,
                 "QuorumLearner",
-                System.getProperty(QuorumAuth.QUORUM_SASL_AUTH_MECHANISM));
+                mechanism);
 
             if (sc.hasInitialResponse()) {
                 responseToken = createSaslToken(new byte[0], sc, learnerLogin);
