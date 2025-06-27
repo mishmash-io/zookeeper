@@ -18,6 +18,7 @@
 
 package org.apache.zookeeper;
 
+import java.util.function.Supplier;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 
@@ -34,18 +35,4 @@ public class Login extends org.apache.zookeeper.common.Login {
         super(loginContextName, callbackHandlerSupplier, zkConfig);
     }
 
-    // this method also visible for unit tests, to make sure kerberos state cleaned up
-    protected synchronized void logout() throws LoginException {
-        // We need to make sure not to call LoginContext.logout() when we
-        // are not logged in. Since Java 9 this could result in an NPE.
-        // See ZOOKEEPER-4477 for more details.
-        if (subject != null && !subject.getPrincipals().isEmpty()) {
-            login.logout();
-        }
-    }
-
-    // this method is overwritten in unit tests to test concurrency
-    protected void sleepBeforeRetryFailedRefresh() throws InterruptedException {
-        Thread.sleep(10 * 1000);
-    }
 }

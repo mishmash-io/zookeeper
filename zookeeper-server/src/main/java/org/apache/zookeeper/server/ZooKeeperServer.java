@@ -182,17 +182,6 @@ public class ZooKeeperServer implements SessionExpirer, ServerStats.Provider {
         LOG.info("Update {} to {}", ENABLE_EAGER_ACL_CHECK, enabled);
     }
 
-    // @VisibleForTesting
-    public static boolean isEnableEagerACLCheck() {
-        return enableEagerACLCheck;
-    }
-
-    // @VisibleForTesting
-    public static void setEnableEagerACLCheck(boolean enabled) {
-        ZooKeeperServer.enableEagerACLCheck = enabled;
-        LOG.info("Update {} to {}", ENABLE_EAGER_ACL_CHECK, enabled);
-    }
-
     public static boolean isCloseSessionTxnEnabled() {
         return closeSessionTxnEnabled;
     }
