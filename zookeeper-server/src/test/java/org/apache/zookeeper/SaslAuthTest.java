@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.io.File;
 import java.io.FileWriter;
@@ -277,7 +278,7 @@ public class SaslAuthTest extends ClientBase {
             watcher.waitForConnected(CONNECTION_TIMEOUT);
             zk.getData("/", false, null);
 
-            assertSame("Login thread should not been recreated on disconnect", l1, sendThread.getLogin());
+            assertSame(l1, sendThread.getLogin(), "Login thread should not been recreated on disconnect");
         } finally {
             if (zk != null) {
                 zk.close();

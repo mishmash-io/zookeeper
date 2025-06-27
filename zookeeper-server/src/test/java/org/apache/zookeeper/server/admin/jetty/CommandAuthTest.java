@@ -189,9 +189,9 @@ public class CommandAuthTest extends ZKTestCase {
 
     @Test
     public void testAuthCheck_invalidServerRequiredConfig() {
-        assertThrows("An active server is required for auth check",
-        IllegalArgumentException.class,
-        () -> new AuthTestCommand(false, ZooDefs.Perms.ALL, ROOT_PATH));
+        assertThrows(IllegalArgumentException.class,
+        () -> new AuthTestCommand(false, ZooDefs.Perms.ALL, ROOT_PATH),
+        "An active server is required for auth check");
     }
 
     @Test
