@@ -22,7 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import java.io.File;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+import org.apache.zookeeper.metrics.MetricsUtils;
 import org.apache.zookeeper.util.ServiceUtils;
+import org.hamcrest.CustomMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.StringDescription;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +46,7 @@ public class ZKTestCase {
 
     protected static final File testBaseDir = new File(System.getProperty("build.test.dir", "build"));
     private static final Logger LOG = LoggerFactory.getLogger(ZKTestCase.class);
+    public static final int DEFAULT_METRIC_TIMEOUT = 30;
 
     static {
         // Disable System.exit in tests.
@@ -50,6 +57,25 @@ public class ZKTestCase {
 
     protected String getTestName() {
         return testName;
+    }
+
+    public void syncClient(ZooKeeper zk, boolean synchronous) throws KeeperException {
+        if (synchronous) {
+            try {
+                zk.sync("/");
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+            return;
+        }
+        final CompletableFuture<KeeperException.Code> synced = new CompletableFuture<>();
+        zk.sync("/", (rc, path, ctx) -> {
+            synced.complete(KeeperException.Code.get(rc));
+        }, null);
+        KeeperException.Code code = synced.join();
+        if (code != KeeperException.Code.OK) {
+            throw KeeperException.create(code);
+        }
     }
 
     @BeforeAll
@@ -71,6 +97,10 @@ public class ZKTestCase {
         // accidentally attempting to start multiple admin servers on the
         // same port.
         System.setProperty("zookeeper.admin.enableServer", "false");
+
+        // disable rate limiting
+        System.setProperty("zookeeper.admin.rateLimiterIntervalInMS", "0");
+
         // ZOOKEEPER-2693 disables all 4lw by default.
         // Here we enable the 4lw which ZooKeeper tests depends.
         System.setProperty("zookeeper.4lw.commands.whitelist", "*");
@@ -99,7 +129,7 @@ public class ZKTestCase {
      * @param timeout   timeout in seconds
      * @throws InterruptedException
      */
-    public void waitFor(String msg, WaitForCondition condition, int timeout) throws InterruptedException {
+    public static void waitFor(String msg, WaitForCondition condition, int timeout) throws InterruptedException {
         final Instant deadline = Instant.now().plusSeconds(timeout);
         while (Instant.now().isBefore(deadline)) {
             if (condition.evaluate()) {
@@ -110,4 +140,36 @@ public class ZKTestCase {
         fail(msg);
     }
 
+    public static <T> void waitForMetric(String metricKey, Matcher<T> matcher) throws InterruptedException {
+        waitForMetric(metricKey, matcher, DEFAULT_METRIC_TIMEOUT);
+    }
+
+    public static <T> void waitForMetric(String metricKey, Matcher<T> matcher, int timeoutInSeconds) throws InterruptedException {
+        String errorMessage = String.format("metric \"%s\" failed to match after %d seconds",
+            metricKey, timeoutInSeconds);
+        waitFor(errorMessage, () -> {
+            @SuppressWarnings("unchecked")
+            T actual = (T) MetricsUtils.currentServerMetrics().get(metricKey);
+            if (!matcher.matches(actual)) {
+                Description description = new StringDescription();
+                matcher.describeMismatch(actual, description);
+                LOG.info("match failed for metric {}: {}", metricKey, description);
+                return false;
+            }
+            return true;
+        }, timeoutInSeconds);
+    }
+
+    /**
+     * Functionally identical to {@link org.hamcrest.Matchers#closeTo} except that it accepts all numerical types
+     * instead of failing if the value is not a {@link Double}.
+     */
+    public static Matcher<Number> closeTo(double operand, double error) {
+        return new CustomMatcher<Number>(String.format("A number within %s of %s", error, operand)) {
+            @Override
+            public boolean matches(Object actual) {
+                return Math.abs(operand - ((Number) actual).doubleValue()) <= error;
+            }
+        };
+    }
 }

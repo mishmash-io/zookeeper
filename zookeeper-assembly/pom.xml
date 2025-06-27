@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.zookeeper</groupId>
     <artifactId>parent</artifactId>
-    <version>3.8.3</version>
+    <version>3.9.3</version>
   </parent>
 
   <artifactId>zookeeper-assembly</artifactId>
@@ -102,6 +102,10 @@
     <dependency>
       <groupId>jline</groupId>
       <artifactId>jline</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
     </dependency>
     <dependency>
        <groupId>io.dropwizard.metrics</groupId>

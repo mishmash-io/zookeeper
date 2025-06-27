@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 import org.apache.zookeeper.PortAssignment;
 import org.apache.zookeeper.test.ClientBase;
+import org.junit.function.ThrowingRunnable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -95,4 +96,31 @@ public class ZookeeperServerEmbeddedTest {
 
     }
 
+    @Test
+    public void testBindPortZero() throws Exception {
+        final Properties configZookeeper = new Properties();
+        final ZooKeeperServerEmbedded.ZookKeeperServerEmbeddedBuilder builder = ZooKeeperServerEmbedded.builder()
+            .baseDir(baseDir)
+            .configuration(configZookeeper)
+            .exitHandler(ExitHandler.LOG_ONLY);
+
+        // Unconfigured client port will still fail
+        try (ZooKeeperServerEmbedded zkServer = builder.build()) {
+            zkServer.start();
+            assertThrows(IllegalStateException.class, new ThrowingRunnable() {
+                @Override
+                public void run() throws Throwable {
+                    zkServer.getConnectionString();
+                }
+            });
+        }
+
+        // Explicit port zero should work
+        configZookeeper.put("clientPort", "0");
+        try (ZooKeeperServerEmbedded zkServer = builder.build()) {
+            zkServer.start();
+            assertThat(zkServer.getConnectionString(), not(endsWith(":0")));
+            assertTrue(ClientBase.waitForServerUp(zkServer.getConnectionString(), 60000));
+        }
+    }
 }

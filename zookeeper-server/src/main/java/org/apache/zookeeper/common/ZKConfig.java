@@ -50,7 +50,7 @@ public class ZKConfig {
     public static final String KINIT_COMMAND = "zookeeper.kinit";
     public static final String JGSS_NATIVE = "sun.security.jgss.native";
 
-    private final Map<String, String> properties = new HashMap<String, String>();
+    private final Map<String, String> properties = new HashMap<>();
 
     /**
      * properties, which are common to both client and server, are initialized
@@ -105,6 +105,7 @@ public class ZKConfig {
         try (ClientX509Util clientX509Util = new ClientX509Util()) {
             putSSLProperties(clientX509Util);
             properties.put(clientX509Util.getSslAuthProviderProperty(), System.getProperty(clientX509Util.getSslAuthProviderProperty()));
+            properties.put(clientX509Util.getSslProviderProperty(), System.getProperty(clientX509Util.getSslProviderProperty()));
         }
 
         try (X509Util x509Util = new QuorumX509Util()) {

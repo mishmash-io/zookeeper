@@ -39,8 +39,9 @@ import org.apache.jute.BinaryOutputArchive;
 import org.apache.jute.Record;
 import org.apache.zookeeper.Quotas;
 import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooDefs.OpCode;
+import org.apache.zookeeper.compat.ProtocolManager;
+import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.metrics.Counter;
@@ -53,23 +54,16 @@ import org.slf4j.LoggerFactory;
  * Interface to a Server connection - represents a connection from a client
  * to the server.
  */
-public abstract class ServerCnxn implements Stats, Watcher {
+public abstract class ServerCnxn implements Stats, ServerWatcher {
 
     // This is just an arbitrary object to represent requests issued by
     // (aka owned by) this class
     public static final Object me = new Object();
     private static final Logger LOG = LoggerFactory.getLogger(ServerCnxn.class);
 
-    private Set<Id> authInfo = Collections.newSetFromMap(new ConcurrentHashMap<Id, Boolean>());
-
-    /**
-     * If the client is of old version, we don't send r-o mode info to it.
-     * The reason is that if we would, old C client doesn't read it, which
-     * results in TCP RST packet, i.e. "connection reset by peer".
-     */
-    boolean isOldClient = true;
-
-    AtomicLong outstandingCount = new AtomicLong();
+    public final ProtocolManager protocolManager = new ProtocolManager();
+    private final Set<Id> authInfo = Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private final AtomicLong outstandingCount = new AtomicLong();
 
     /** The ZooKeeperServer for this connection. May be null if the server
      * is not currently serving requests (for example if the server is not
@@ -264,7 +258,11 @@ public abstract class ServerCnxn implements Stats, Watcher {
     /* notify the client the session is closing and close/cleanup socket */
     public abstract void sendCloseSession();
 
-    public abstract void process(WatchedEvent event);
+    public void process(WatchedEvent event) {
+        process(event, null);
+    }
+
+    public abstract void process(WatchedEvent event, List<ACL> znodeAcl);
 
     public abstract long getSessionId();
 
@@ -553,7 +551,7 @@ public abstract class ServerCnxn implements Stats, Watcher {
     }
 
     public synchronized Map<String, Object> getConnectionInfo(boolean brief) {
-        Map<String, Object> info = new LinkedHashMap<String, Object>();
+        Map<String, Object> info = new LinkedHashMap<>();
         info.put("remote_socket_address", getRemoteSocketAddress());
         info.put("interest_ops", getInterestOps());
         info.put("outstanding_requests", getOutstandingRequests());

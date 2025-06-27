@@ -18,8 +18,6 @@
 
 package org.apache.zookeeper.server;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,6 +26,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.zookeeper.DeleteContainerRequest;
 import org.apache.zookeeper.EphemeralType;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.common.Time;
@@ -51,7 +50,7 @@ public class ContainerManager {
     private final int maxPerMinute;
     private final long maxNeverUsedIntervalMs;
     private final Timer timer;
-    private final AtomicReference<TimerTask> task = new AtomicReference<TimerTask>(null);
+    private final AtomicReference<TimerTask> task = new AtomicReference<>(null);
 
     /**
      * @param zkDb the ZK database
@@ -131,8 +130,8 @@ public class ContainerManager {
         for (String containerPath : getCandidates()) {
             long startMs = Time.currentElapsedTime();
 
-            ByteBuffer path = ByteBuffer.wrap(containerPath.getBytes(UTF_8));
-            Request request = new Request(null, 0, 0, ZooDefs.OpCode.deleteContainer, path, null);
+            DeleteContainerRequest record = new DeleteContainerRequest(containerPath);
+            Request request = new Request(null, 0, 0, ZooDefs.OpCode.deleteContainer, RequestRecord.fromRecord(record), null);
             try {
                 LOG.info("Attempting to delete candidate container: {}", containerPath);
                 postDeleteRequest(request);
@@ -160,7 +159,7 @@ public class ContainerManager {
 
     // VisibleForTesting
     protected Collection<String> getCandidates() {
-        Set<String> candidates = new HashSet<String>();
+        Set<String> candidates = new HashSet<>();
         for (String containerPath : zkDb.getDataTree().getContainers()) {
             DataNode node = zkDb.getDataTree().getNode(containerPath);
             if ((node != null) && node.getChildren().isEmpty()) {

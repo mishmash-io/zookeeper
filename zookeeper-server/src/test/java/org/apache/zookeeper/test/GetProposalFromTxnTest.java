@@ -101,13 +101,13 @@ public class GetProposalFromTxnTest extends ZKTestCase {
         Iterator<Proposal> itr = db.getProposalsFromTxnLog(zxids[0], 10000000);
 
         int createCount = 0;
-        ArrayList<Long> retrievedZxids = new ArrayList<Long>(MSG_COUNT);
+        ArrayList<Long> retrievedZxids = new ArrayList<>(MSG_COUNT);
 
         // Get zxid of create requests
         while (itr.hasNext()) {
             Proposal proposal = itr.next();
             TxnLogEntry logEntry = SerializeUtils.deserializeTxn(
-                    proposal.packet.getData());
+                    proposal.getQuorumPacket().getData());
             TxnHeader hdr = logEntry.getHeader();
             Record rec = logEntry.getTxn();
             if (hdr.getType() == OpCode.create) {

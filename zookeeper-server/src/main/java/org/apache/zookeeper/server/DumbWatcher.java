@@ -22,8 +22,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.security.cert.Certificate;
+import java.util.List;
 import org.apache.jute.Record;
 import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 import org.apache.zookeeper.proto.ReplyHeader;
 
@@ -33,6 +35,9 @@ import org.apache.zookeeper.proto.ReplyHeader;
 public class DumbWatcher extends ServerCnxn {
 
     private long sessionId;
+    private String mostRecentPath;
+    private Event.EventType mostRecentEventType;
+    private long mostRecentZxid = WatchedEvent.NO_ZXID;
 
     public DumbWatcher() {
         this(0);
@@ -48,8 +53,24 @@ public class DumbWatcher extends ServerCnxn {
     }
 
     @Override
-    public void process(WatchedEvent event) {
+    public void process(WatchedEvent event, List<ACL> znodeAcl) {
+        mostRecentEventType = event.getType();
+        mostRecentZxid = event.getZxid();
+        mostRecentPath = event.getPath();
     }
+
+    public String getMostRecentPath() {
+        return mostRecentPath;
+    }
+
+    public Event.EventType getMostRecentEventType() {
+        return mostRecentEventType;
+    }
+
+    public long getMostRecentZxid() {
+        return mostRecentZxid;
+    }
+
 
     @Override
     int getSessionTimeout() {

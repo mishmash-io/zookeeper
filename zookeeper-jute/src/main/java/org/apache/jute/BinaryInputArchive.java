@@ -47,27 +47,26 @@ public class BinaryInputArchive implements InputArchive {
         }
     }
 
-    private DataInput in;
-    private int maxBufferSize;
-    private int extraMaxBufferSize;
+    private final DataInput in;
+    private final int totalBufferSize;
 
-    public static BinaryInputArchive getArchive(InputStream strm) {
-        return new BinaryInputArchive(new DataInputStream(strm));
+    public static BinaryInputArchive getArchive(InputStream stream) {
+        return new BinaryInputArchive(new DataInputStream(stream));
     }
 
     private static class BinaryIndex implements Index {
-        private int nelems;
+        private int n;
 
         BinaryIndex(int nelems) {
-            this.nelems = nelems;
+            this.n = nelems;
         }
 
         public boolean done() {
-            return (nelems <= 0);
+            return (n <= 0);
         }
 
         public void incr() {
-            nelems--;
+            n--;
         }
     }
 
@@ -80,8 +79,11 @@ public class BinaryInputArchive implements InputArchive {
 
     public BinaryInputArchive(DataInput in, int maxBufferSize, int extraMaxBufferSize) {
         this.in = in;
-        this.maxBufferSize = maxBufferSize;
-        this.extraMaxBufferSize = extraMaxBufferSize;
+        if ((long) maxBufferSize + extraMaxBufferSize > Integer.MAX_VALUE) {
+            this.totalBufferSize = Integer.MAX_VALUE;
+        } else {
+            this.totalBufferSize = maxBufferSize + extraMaxBufferSize;
+        }
     }
 
     public byte readByte(String tag) throws IOException {
@@ -162,7 +164,7 @@ public class BinaryInputArchive implements InputArchive {
     // make up for extra fields, etc. (otherwise e.g. clients may be able to
     // write buffers larger than we can read from disk!)
     private void checkLength(int len) throws IOException {
-        if (len < 0 || len > maxBufferSize + extraMaxBufferSize) {
+        if (len < 0 || len > totalBufferSize) {
             throw new IOException(UNREASONBLE_LENGTH + len);
         }
     }

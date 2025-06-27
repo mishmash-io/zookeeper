@@ -32,6 +32,7 @@ import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.common.ByteBufferInputStream;
 import org.apache.zookeeper.common.Time;
 import org.apache.zookeeper.common.ZKConfig;
+import org.apache.zookeeper.compat.ProtocolManager;
 import org.apache.zookeeper.proto.ConnectResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,8 @@ abstract class ClientCnxnSocket {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientCnxnSocket.class);
 
+    private final ProtocolManager protocolManager = new ProtocolManager();
+
     protected boolean initialized;
 
     /**
@@ -62,7 +65,9 @@ abstract class ClientCnxnSocket {
     protected ByteBuffer incomingBuffer = lenBuffer;
     protected final AtomicLong sentCount = new AtomicLong(0L);
     protected final AtomicLong recvCount = new AtomicLong(0L);
+    // Used for reactive timeout detection, say connection read timeout and session expiration timeout.
     protected long lastHeard;
+    // Used for proactive timeout detection, say ping timeout and connection establishment timeout.
     protected long lastSend;
     protected long now;
     protected ClientCnxn.SendThread sendThread;
@@ -131,27 +136,18 @@ abstract class ClientCnxnSocket {
             }
             buf.append("]");
             if (LOG.isTraceEnabled()) {
-                LOG.trace("readConnectResult {} {}", incomingBuffer.remaining(), buf.toString());
+                LOG.trace("readConnectResult {} {}", incomingBuffer.remaining(), buf);
             }
         }
 
         ByteBufferInputStream bbis = new ByteBufferInputStream(incomingBuffer);
         BinaryInputArchive bbia = BinaryInputArchive.getArchive(bbis);
-        ConnectResponse conRsp = new ConnectResponse();
-        conRsp.deserialize(bbia, "connect");
-
-        // read "is read-only" flag
-        boolean isRO = false;
-        try {
-            isRO = bbia.readBool("readOnly");
-        } catch (IOException e) {
-            // this is ok -- just a packet from an old server which
-            // doesn't contain readOnly field
+        ConnectResponse conRsp = protocolManager.deserializeConnectResponse(bbia);
+        if (!protocolManager.isReadonlyAvailable()) {
             LOG.warn("Connected to an old server; r-o mode will be unavailable");
         }
-
         this.sessionId = conRsp.getSessionId();
-        sendThread.onConnected(conRsp.getTimeOut(), this.sessionId, conRsp.getPasswd(), isRO);
+        sendThread.onConnected(conRsp.getTimeOut(), this.sessionId, conRsp.getPasswd(), conRsp.getReadOnly());
     }
 
     abstract boolean isConnected();

@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.zookeeper</groupId>
     <artifactId>parent</artifactId>
-    <version>3.8.3</version>
+    <version>3.9.3</version>
   </parent>
 
   <artifactId>zookeeper</artifactId>
@@ -69,6 +69,11 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-epoll</artifactId>
+      <classifier>linux-x86_64</classifier>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-tcnative-boringssl-static</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -76,11 +81,9 @@
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
+      <scope>runtime</scope>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -187,7 +190,7 @@
         <executions>
           <execution>
             <!-- ${maven.build.timestamp} does not support timezone :( -->
-            <id>tbuild-time</id>
+            <id>build-time</id>
             <goals>
               <goal>timestamp-property</goal>
             </goals>

@@ -133,7 +133,7 @@ public class Learner {
         LOG.info("{} = {}", LEARNER_CLOSE_SOCKET_ASYNC, closeSocketAsync);
     }
 
-    final ConcurrentHashMap<Long, ServerCnxn> pendingRevalidations = new ConcurrentHashMap<Long, ServerCnxn>();
+    final ConcurrentHashMap<Long, ServerCnxn> pendingRevalidations = new ConcurrentHashMap<>();
 
     public int getPendingRevalidationsCount() {
         return pendingRevalidations.size();
@@ -254,13 +254,9 @@ public class Learner {
         oa.writeLong(request.sessionId);
         oa.writeInt(request.cxid);
         oa.writeInt(request.type);
-        if (request.request != null) {
-            request.request.rewind();
-            int len = request.request.remaining();
-            byte[] b = new byte[len];
-            request.request.get(b);
-            request.request.rewind();
-            oa.write(b);
+        byte[] payload = request.readRequestBytes();
+        if (payload != null) {
+            oa.write(payload);
         }
         oa.close();
         QuorumPacket qp = new QuorumPacket(Leader.REQUEST, -1, baos.toByteArray(), request.authInfo);
@@ -299,7 +295,7 @@ public class Learner {
 
     /**
      * Overridable helper method to simply call sock.connect(). This can be
-     * overriden in tests to fake connection success/failure for connectToLeader.
+     * overridden in tests to fake connection success/failure for connectToLeader.
      */
     protected void sockConnect(Socket sock, InetSocketAddress addr, int timeout) throws IOException {
         sock.connect(addr, timeout);
@@ -559,7 +555,8 @@ public class Learner {
         boolean syncSnapshot = false;
         readPacket(qp);
         Deque<Long> packetsCommitted = new ArrayDeque<>();
-        Deque<PacketInFlight> packetsNotCommitted = new ArrayDeque<>();
+        Deque<PacketInFlight> packetsNotLogged = new ArrayDeque<>();
+
         synchronized (zk) {
             if (qp.getType() == Leader.DIFF) {
                 LOG.info("Getting a diff from the leader 0x{}", Long.toHexString(qp.getZxid()));
@@ -647,11 +644,11 @@ public class Learner {
                         self.setLastSeenQuorumVerifier(qv, true);
                     }
 
-                    packetsNotCommitted.add(pif);
+                    packetsNotLogged.add(pif);
                     break;
                 case Leader.COMMIT:
                 case Leader.COMMITANDACTIVATE:
-                    pif = packetsNotCommitted.peekFirst();
+                    pif = packetsNotLogged.peekFirst();
                     if (pif.hdr.getZxid() == qp.getZxid() && qp.getType() == Leader.COMMITANDACTIVATE) {
                         QuorumVerifier qv = self.configFromString(new String(((SetDataTxn) pif.rec).getData(), UTF_8));
                         boolean majorChange = self.processReconfig(
@@ -670,7 +667,7 @@ public class Learner {
                                 Long.toHexString(pif.hdr.getZxid()));
                         } else {
                             zk.processTxn(pif.hdr, pif.rec);
-                            packetsNotCommitted.remove();
+                            packetsNotLogged.remove();
                         }
                     } else {
                         packetsCommitted.add(qp.getZxid());
@@ -712,7 +709,7 @@ public class Learner {
                         // Apply to db directly if we haven't taken the snapshot
                         zk.processTxn(packet.hdr, packet.rec);
                     } else {
-                        packetsNotCommitted.add(packet);
+                        packetsNotLogged.add(packet);
                         packetsCommitted.add(qp.getZxid());
                     }
 
@@ -749,31 +746,70 @@ public class Learner {
                         zk.takeSnapshot(syncSnapshot);
                     }
 
-                    self.setCurrentEpoch(newEpoch);
+
                     writeToTxnLog = true;
                     //Anything after this needs to go to the transaction log, not applied directly in memory
                     isPreZAB1_0 = false;
 
                     // ZOOKEEPER-3911: make sure sync the uncommitted logs before commit them (ACK NEWLEADER).
-                    sock.setSoTimeout(self.tickTime * self.syncLimit);
-                    self.setSyncMode(QuorumPeer.SyncMode.NONE);
-                    zk.startupWithoutServing();
-                    if (zk instanceof FollowerZooKeeperServer) {
+                    if (zk instanceof FollowerZooKeeperServer && !packetsCommitted.isEmpty()) {
+                        long startTime = Time.currentElapsedTime();
                         FollowerZooKeeperServer fzk = (FollowerZooKeeperServer) zk;
-                        for (PacketInFlight p : packetsNotCommitted) {
-                            fzk.logRequest(p.hdr, p.rec, p.digest);
+
+                        /*
+                         * @see https://github.com/apache/zookeeper/pull/1848
+                         * Persist and process the committed txns in "packetsNotLogged"
+                         * according to "packetsCommitted", which have been committed by
+                         * the leader. For these committed proposals, there is no need to
+                         * reply ack.
+                         *
+                         * @see https://issues.apache.org/jira/browse/ZOOKEEPER-4394
+                         * Keep the outstanding proposals in "packetsNotLogged" to avoid
+                         * NullPointerException when the follower receives COMMIT packet(s)
+                         * right after replying NEWLEADER ack.
+                         */
+                        while (!packetsCommitted.isEmpty()) {
+                            long zxid = packetsCommitted.removeFirst();
+                            pif = packetsNotLogged.peekFirst();
+                            if (pif == null) {
+                                LOG.warn("Committing 0x{}, but got no proposal", Long.toHexString(zxid));
+                                continue;
+                            } else if (pif.hdr.getZxid() != zxid) {
+                                LOG.warn("Committing 0x{}, but next proposal is 0x{}",
+                                        Long.toHexString(zxid), Long.toHexString(pif.hdr.getZxid()));
+                                continue;
+                            }
+                            packetsNotLogged.removeFirst();
+                            fzk.appendRequest(pif.hdr, pif.rec, pif.digest);
+                            fzk.processTxn(pif.hdr, pif.rec);
                         }
-                        packetsNotCommitted.clear();
+
+                        // @see https://issues.apache.org/jira/browse/ZOOKEEPER-4646
+                        // Make sure to persist the txns to disk before replying NEWLEADER ack.
+                        fzk.getZKDatabase().commit();
+                        LOG.info("It took {}ms to persist and commit txns in packetsCommitted. "
+                                        + "{} outstanding txns left in packetsNotLogged",
+                                Time.currentElapsedTime() - startTime, packetsNotLogged.size());
                     }
 
+                    // @see https://issues.apache.org/jira/browse/ZOOKEEPER-4643
+                    // @see https://issues.apache.org/jira/browse/ZOOKEEPER-4785
+                    // Update current epoch after the committed txns are persisted
+                    self.setCurrentEpoch(newEpoch);
+                    LOG.info("Set the current epoch to {}", newEpoch);
+                    sock.setSoTimeout(self.tickTime * self.syncLimit);
+                    self.setSyncMode(QuorumPeer.SyncMode.NONE);
+
+                    // send NEWLEADER ack after the committed txns are persisted
                     writePacket(new QuorumPacket(Leader.ACK, newLeaderZxid, null, null), true);
+                    LOG.info("Sent NEWLEADER ack to leader with zxid {}", Long.toHexString(newLeaderZxid));
                     break;
                 }
             }
         }
         ack.setZxid(ZxidUtils.makeZxid(newEpoch, 0));
         writePacket(ack, true);
-        zk.startServing();
+        zk.startup();
         /*
          * Update the election vote here to ensure that all members of the
          * ensemble report the same vote to new servers that start up and
@@ -786,17 +822,20 @@ public class Learner {
         // We need to log the stuff that came in between the snapshot and the uptodate
         if (zk instanceof FollowerZooKeeperServer) {
             FollowerZooKeeperServer fzk = (FollowerZooKeeperServer) zk;
-            for (PacketInFlight p : packetsNotCommitted) {
+            for (PacketInFlight p : packetsNotLogged) {
                 fzk.logRequest(p.hdr, p.rec, p.digest);
             }
+            LOG.info("{} txns have been logged asynchronously", packetsNotLogged.size());
+
             for (Long zxid : packetsCommitted) {
                 fzk.commit(zxid);
             }
+            LOG.info("{} txns have been committed", packetsCommitted.size());
         } else if (zk instanceof ObserverZooKeeperServer) {
             // Similar to follower, we need to log requests between the snapshot
             // and UPTODATE
             ObserverZooKeeperServer ozk = (ObserverZooKeeperServer) zk;
-            for (PacketInFlight p : packetsNotCommitted) {
+            for (PacketInFlight p : packetsNotLogged) {
                 Long zxid = packetsCommitted.peekFirst();
                 if (p.hdr.getZxid() != zxid) {
                     // log warning message if there is no matching commit
@@ -808,9 +847,7 @@ public class Learner {
                     continue;
                 }
                 packetsCommitted.remove();
-                Request request = new Request(null, p.hdr.getClientId(), p.hdr.getCxid(), p.hdr.getType(), null, null);
-                request.setTxn(p.rec);
-                request.setHdr(p.hdr);
+                Request request = new Request(p.hdr.getClientId(), p.hdr.getCxid(), p.hdr.getType(), p.hdr, p.rec, -1);
                 request.setTxnDigest(p.digest);
                 ozk.commitRequest(request);
             }
@@ -879,26 +916,26 @@ public class Learner {
     }
 
     void closeSocket() {
-        if (sock != null) {
-            if (sockBeingClosed.compareAndSet(false, true)) {
-                if (closeSocketAsync) {
-                    final Thread closingThread = new Thread(() -> closeSockSync(), "CloseSocketThread(sid:" + zk.getServerId());
-                    closingThread.setDaemon(true);
-                    closingThread.start();
-                } else {
-                    closeSockSync();
-                }
+        if (sockBeingClosed.compareAndSet(false, true)) {
+            if (sock == null) { // Closing before establishing the connection is a noop
+                return;
+            }
+            Socket socket = sock;
+            sock = null;
+            if (closeSocketAsync) {
+                final Thread closingThread = new Thread(() -> closeSockSync(socket), "CloseSocketThread(sid:" + zk.getServerId());
+                closingThread.setDaemon(true);
+                closingThread.start();
+            } else {
+                closeSockSync(socket);
             }
         }
     }
 
-    void closeSockSync() {
+    private static void closeSockSync(Socket socket) {
         try {
             long startTime = Time.currentElapsedTime();
-            if (sock != null) {
-                sock.close();
-                sock = null;
-            }
+            socket.close();
             ServerMetrics.getMetrics().SOCKET_CLOSING_TIME.add(Time.currentElapsedTime() - startTime);
         } catch (IOException e) {
             LOG.warn("Ignoring error closing connection to leader", e);

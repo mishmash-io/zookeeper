@@ -219,7 +219,7 @@ name "<path>-2147483648").
 
 #### Container Nodes
 
-**Added in 3.6.0**
+**Added in 3.5.3**
 
 ZooKeeper has the notion of container znodes. Container znodes are
 special purpose znodes useful for recipes such as leader, lock, etc.
@@ -236,7 +236,7 @@ znode when it occurs.
 
 #### TTL Nodes
 
-**Added in 3.6.0**
+**Added in 3.5.3**
 
 When creating PERSISTENT or PERSISTENT_SEQUENTIAL znodes,
 you can optionally set a TTL in milliseconds for the znode. If the znode
@@ -829,6 +829,10 @@ in order to retrieve ACLs of a znode user has to have _READ_ or _ADMIN_
  permission, but without _ADMIN_ permission, digest hash values will be 
 masked out.
 
+As of versions **3.9.2 / 3.8.4 / 3.7.3** the exists() call will now verify ACLs 
+on nodes that exist and the client must have READ permission otherwise
+'Insufficient permission' error will be raised.
+
 <a name="sc_BuiltinACLSchemes"></a>
 
 #### Builtin ACL Schemes
@@ -1401,8 +1405,7 @@ If you're building the client from a check-out from the Apache
 repository, follow the steps outlined below. If you're building from a
 project source package downloaded from apache, skip to step **3**.
 
-1. Run `ant compile_jute` from the ZooKeeper
-  top level directory (*.../trunk*).
+1. Run `mvn compile` in zookeeper-jute directory (*.../trunk/zookeeper-jute*).
   This will create a directory named "generated" under
   *.../trunk/zookeeper-client/zookeeper-client-c*.
 1. Change directory to the*.../trunk/zookeeper-client/zookeeper-client-c*

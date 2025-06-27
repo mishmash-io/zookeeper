@@ -67,7 +67,6 @@ import org.apache.zookeeper.server.ZooTrace;
 import org.apache.zookeeper.server.quorum.QuorumPeer.LearnerType;
 import org.apache.zookeeper.server.quorum.auth.QuorumAuthServer;
 import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
-import org.apache.zookeeper.server.util.SerializeUtils;
 import org.apache.zookeeper.server.util.ZxidUtils;
 import org.apache.zookeeper.util.ExitCode;
 import org.apache.zookeeper.util.ServiceUtils;
@@ -89,14 +88,60 @@ public class Leader extends LearnerMaster {
 
     public static class Proposal extends SyncedLearnerTracker {
 
-        public QuorumPacket packet;
-        public Request request;
+        private QuorumPacket packet;
+        protected Request request;
+
+        public Proposal() {
+        }
+
+        public Proposal(QuorumPacket packet) {
+            this.packet = packet;
+        }
+
+        public Proposal(Request request, QuorumPacket packet) {
+            this.request = request;
+            this.packet = packet;
+        }
+
+        public QuorumPacket getQuorumPacket() {
+            return packet;
+        }
+
+        public Request getRequest() {
+            return request;
+        }
+
+        public long getZxid() {
+            return packet.getZxid();
+        }
 
         @Override
         public String toString() {
             return packet.getType() + ", " + packet.getZxid() + ", " + request;
         }
+    }
 
+    public static class PureRequestProposal extends Proposal {
+
+        public PureRequestProposal(Request request) {
+            this.request = request;
+        }
+
+        @Override
+        public QuorumPacket getQuorumPacket() {
+            byte[] data = request.getSerializeData();
+            return new QuorumPacket(Leader.PROPOSAL, request.zxid, data, null);
+        }
+
+        @Override
+        public long getZxid() {
+            return request.zxid;
+        }
+
+        @Override
+        public String toString() {
+            return request.toString();
+        }
     }
 
     // log ack latency if zxid is a multiple of ackLoggingFrequency. If <=0, disable logging.
@@ -127,7 +172,7 @@ public class Leader extends LearnerMaster {
     volatile LearnerCnxAcceptor cnxAcceptor = null;
 
     // list of all the learners, including followers and observers
-    private final HashSet<LearnerHandler> learners = new HashSet<LearnerHandler>();
+    private final HashSet<LearnerHandler> learners = new HashSet<>();
 
     private final BufferStats proposalStats;
 
@@ -143,24 +188,24 @@ public class Leader extends LearnerMaster {
      */
     public List<LearnerHandler> getLearners() {
         synchronized (learners) {
-            return new ArrayList<LearnerHandler>(learners);
+            return new ArrayList<>(learners);
         }
     }
 
     // list of followers that are ready to follow (i.e synced with the leader)
-    private final HashSet<LearnerHandler> forwardingFollowers = new HashSet<LearnerHandler>();
+    private final HashSet<LearnerHandler> forwardingFollowers = new HashSet<>();
 
     /**
      * Returns a copy of the current forwarding follower snapshot
      */
     public List<LearnerHandler> getForwardingFollowers() {
         synchronized (forwardingFollowers) {
-            return new ArrayList<LearnerHandler>(forwardingFollowers);
+            return new ArrayList<>(forwardingFollowers);
         }
     }
 
     public List<LearnerHandler> getNonVotingFollowers() {
-        List<LearnerHandler> nonVotingFollowers = new ArrayList<LearnerHandler>();
+        List<LearnerHandler> nonVotingFollowers = new ArrayList<>();
         synchronized (forwardingFollowers) {
             for (LearnerHandler lh : forwardingFollowers) {
                 if (!isParticipant(lh.getSid())) {
@@ -181,14 +226,14 @@ public class Leader extends LearnerMaster {
         }
     }
 
-    private final HashSet<LearnerHandler> observingLearners = new HashSet<LearnerHandler>();
+    private final HashSet<LearnerHandler> observingLearners = new HashSet<>();
 
     /**
      * Returns a copy of the current observer snapshot
      */
     public List<LearnerHandler> getObservingLearners() {
         synchronized (observingLearners) {
-            return new ArrayList<LearnerHandler>(observingLearners);
+            return new ArrayList<>(observingLearners);
         }
     }
 
@@ -217,7 +262,7 @@ public class Leader extends LearnerMaster {
     }
 
     // Pending sync requests. Must access under 'this' lock.
-    private final Map<Long, List<LearnerSyncRequest>> pendingSyncs = new HashMap<Long, List<LearnerSyncRequest>>();
+    private final Map<Long, List<LearnerSyncRequest>> pendingSyncs = new HashMap<>();
 
     public synchronized int getNumPendingSyncs() {
         return pendingSyncs.size();
@@ -270,7 +315,7 @@ public class Leader extends LearnerMaster {
      * @param qv is a QuorumVerifier
      */
     public boolean isQuorumSynced(QuorumVerifier qv) {
-        HashSet<Long> ids = new HashSet<Long>();
+        HashSet<Long> ids = new HashSet<>();
         if (qv.getVotingMembers().containsKey(self.getMyId())) {
             ids.add(self.getMyId());
         }
@@ -310,6 +355,10 @@ public class Leader extends LearnerMaster {
         this.zk = zk;
     }
 
+    InetSocketAddress recreateInetSocketAddr(String hostString, int port) {
+        return new InetSocketAddress(hostString, port);
+    }
+
     Optional<ServerSocket> createServerSocket(InetSocketAddress address, boolean portUnification, boolean sslQuorum) {
         ServerSocket serverSocket;
         try {
@@ -319,7 +368,7 @@ public class Leader extends LearnerMaster {
                 serverSocket = new ServerSocket();
             }
             serverSocket.setReuseAddress(true);
-            serverSocket.bind(address);
+            serverSocket.bind(recreateInetSocketAddr(address.getHostString(), address.getPort()));
             return Optional.of(serverSocket);
         } catch (IOException e) {
             LOG.error("Couldn't bind to {}", address.toString(), e);
@@ -430,9 +479,9 @@ public class Leader extends LearnerMaster {
      */
     static final int INFORMANDACTIVATE = 19;
 
-    final ConcurrentMap<Long, Proposal> outstandingProposals = new ConcurrentHashMap<Long, Proposal>();
+    final ConcurrentMap<Long, Proposal> outstandingProposals = new ConcurrentHashMap<>();
 
-    private final ConcurrentLinkedQueue<Proposal> toBeApplied = new ConcurrentLinkedQueue<Proposal>();
+    private final ConcurrentLinkedQueue<Proposal> toBeApplied = new ConcurrentLinkedQueue<>();
 
     // VisibleForTesting
     protected final Proposal newLeaderProposal = new Proposal();
@@ -669,7 +718,7 @@ public class Leader extends LearnerMaster {
                 shutdown("Waiting for a quorum of followers, only synced with sids: [ "
                          + newLeaderProposal.ackSetsToString()
                          + " ]");
-                HashSet<Long> followerSet = new HashSet<Long>();
+                HashSet<Long> followerSet = new HashSet<>();
 
                 for (LearnerHandler f : getLearners()) {
                     if (self.getQuorumVerifier().getVotingMembers().containsKey(f.getSid())) {
@@ -877,7 +926,7 @@ public class Leader extends LearnerMaster {
         // start with an initial set of candidates that are voters from new config that
         // acknowledged the reconfig op (there must be a quorum). Choose one of them as
         // current leader candidate
-        HashSet<Long> candidates = new HashSet<Long>(newQVAcksetPair.getAckset());
+        HashSet<Long> candidates = new HashSet<>(newQVAcksetPair.getAckset());
         candidates.remove(self.getMyId()); // if we're here, I shouldn't be the leader
         long curCandidate = candidates.iterator().next();
 
@@ -1251,13 +1300,11 @@ public class Leader extends LearnerMaster {
             throw new XidRolloverException(msg);
         }
 
-        byte[] data = SerializeUtils.serializeRequest(request);
+        byte[] data = request.getSerializeData();
         proposalStats.setLastBufferSize(data.length);
         QuorumPacket pp = new QuorumPacket(Leader.PROPOSAL, request.zxid, data, null);
 
-        Proposal p = new Proposal();
-        p.packet = pp;
-        p.request = request;
+        Proposal p = new Proposal(request, pp);
 
         synchronized (this) {
             p.addQuorumVerifier(self.getQuorumVerifier());
@@ -1326,7 +1373,7 @@ public class Leader extends LearnerMaster {
             }
             // Only participant need to get outstanding proposals
             if (handler.getLearnerType() == LearnerType.PARTICIPANT) {
-                List<Long> zxids = new ArrayList<Long>(outstandingProposals.keySet());
+                List<Long> zxids = new ArrayList<>(outstandingProposals.keySet());
                 Collections.sort(zxids);
                 for (Long zxid : zxids) {
                     if (zxid <= lastSeenZxid) {
@@ -1355,7 +1402,7 @@ public class Leader extends LearnerMaster {
     }
 
     // VisibleForTesting
-    protected final Set<Long> connectingFollowers = new HashSet<Long>();
+    protected final Set<Long> connectingFollowers = new HashSet<>();
 
     private volatile boolean quitWaitForEpoch = false;
     private volatile long timeStartWaitForEpoch = -1;
@@ -1453,7 +1500,7 @@ public class Leader extends LearnerMaster {
     }
 
     // VisibleForTesting
-    protected final Set<Long> electingFollowers = new HashSet<Long>();
+    protected final Set<Long> electingFollowers = new HashSet<>();
     // VisibleForTesting
     protected boolean electionFinished = false;
 

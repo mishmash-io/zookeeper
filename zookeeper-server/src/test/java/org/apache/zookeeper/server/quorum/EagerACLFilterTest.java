@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -124,7 +123,7 @@ public class EagerACLFilterTest extends QuorumBase {
         ZooKeeperServer.setEnableEagerACLCheck(enabled);
     }
 
-    private void assertTransactionState(String operation, QuorumPeer peer, long lastxid) {
+    private void assertTransactionState(String operation, QuorumPeer peer, long lastxid) throws Exception {
         if (peer == zkLeader && peer != zkConnected) {
             // The operation is performed on no leader, but we are asserting on leader.
             // There is no happen-before between `zkLeader.getLastLoggedZxid()` and
@@ -133,7 +132,7 @@ public class EagerACLFilterTest extends QuorumBase {
             // to sync leader client to go through commit and response path in leader to
             // build happen-before between `zkLeader.getLastLoggedZxid()` and side effect
             // of previous operation.
-            syncClient(zkLeaderClient);
+            syncClient(zkLeaderClient, false);
         }
         assertTrue(peer == zkLeader || peer == zkConnected);
         boolean eagerACL = ZooKeeperServer.isEnableEagerACLCheck();

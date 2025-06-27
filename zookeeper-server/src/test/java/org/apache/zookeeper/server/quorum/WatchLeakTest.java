@@ -97,12 +97,12 @@ public class WatchLeakTest {
             }
         });
 
-        ZKDatabase database = new ZKDatabase(null);
+        ZKDatabase database = new ZKDatabase(mock(FileTxnSnapLog.class));
         database.setlastProcessedZxid(2L);
         QuorumPeer quorumPeer = mock(QuorumPeer.class);
         FileTxnSnapLog logfactory = mock(FileTxnSnapLog.class);
         // Directories are not used but we need it to avoid NPE
-        when(logfactory.getDataDir()).thenReturn(new File(""));
+        when(logfactory.getDataLogDir()).thenReturn(new File(""));
         when(logfactory.getSnapDir()).thenReturn(new File(""));
         FollowerZooKeeperServer fzks = null;
 
@@ -228,7 +228,7 @@ public class WatchLeakTest {
      * @return a message that attempts to set 1 watch on /
      */
     private ByteBuffer createWatchesMessage() {
-        List<String> dataWatches = new ArrayList<String>(1);
+        List<String> dataWatches = new ArrayList<>(1);
         dataWatches.add("/");
         List<String> existWatches = Collections.emptyList();
         List<String> childWatches = Collections.emptyList();
@@ -255,8 +255,8 @@ public class WatchLeakTest {
         Random r = new Random(SESSION_ID ^ superSecret);
         byte[] p = new byte[16];
         r.nextBytes(p);
-        ConnectRequest conReq = new ConnectRequest(0, 1L, 30000, SESSION_ID, p);
-        MockPacket packet = new MockPacket(null, null, conReq, null, null, false);
+        ConnectRequest conReq = new ConnectRequest(0, 1L, 30000, SESSION_ID, p, false);
+        MockPacket packet = new MockPacket(null, null, conReq, null, null);
         return packet.createAndReturnBB();
     }
 

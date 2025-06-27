@@ -121,7 +121,7 @@ public class TruncateTest extends ZKTestCase {
             append(zkdb, i);
         }
         zkdb.close();
-        File[] logs = snaplog.getDataDir().listFiles();
+        File[] logs = snaplog.getDataLogDir().listFiles();
         for (int i = 0; i < logs.length; i++) {
             LOG.debug("Deleting: {}", logs[i].getName());
             assertTrue(logs[i].delete(), "Failed to delete log file: " + logs[i].getName());
@@ -189,7 +189,7 @@ public class TruncateTest extends ZKTestCase {
         int port3 = PortAssignment.unique();
 
         // Start up two of the quorum and add 10 txns
-        Map<Long, QuorumServer> peers = new HashMap<Long, QuorumServer>();
+        Map<Long, QuorumServer> peers = new HashMap<>();
         peers.put(Long.valueOf(1), new QuorumServer(1, new InetSocketAddress("127.0.0.1", PortAssignment.unique()), new InetSocketAddress("127.0.0.1", PortAssignment.unique()), new InetSocketAddress("127.0.0.1", port1)));
         peers.put(Long.valueOf(2), new QuorumServer(2, new InetSocketAddress("127.0.0.1", PortAssignment.unique()), new InetSocketAddress("127.0.0.1", PortAssignment.unique()), new InetSocketAddress("127.0.0.1", port2)));
         peers.put(Long.valueOf(3), new QuorumServer(3, new InetSocketAddress("127.0.0.1", PortAssignment.unique()), new InetSocketAddress("127.0.0.1", PortAssignment.unique()), new InetSocketAddress("127.0.0.1", port3)));

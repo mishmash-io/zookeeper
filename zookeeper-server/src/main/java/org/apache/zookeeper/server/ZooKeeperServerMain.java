@@ -193,9 +193,7 @@ public class ZooKeeperServerMain {
             if (secureCnxnFactory != null) {
                 secureCnxnFactory.join();
             }
-            if (zkServer.canShutdown()) {
-                zkServer.shutdown(true);
-            }
+            zkServer.shutdown(true);
         } catch (InterruptedException e) {
             // warn, but generally this is ok
             LOG.warn("Server interrupted", e);
@@ -244,6 +242,23 @@ public class ZooKeeperServerMain {
     ServerCnxnFactory getSecureCnxnFactory() {
         return secureCnxnFactory;
     }
+
+    // VisibleForTesting
+    public int getClientPort() {
+        if (cnxnFactory != null) {
+            return cnxnFactory.getLocalPort();
+        }
+        return 0;
+    }
+
+    // VisibleForTesting
+    public int getSecureClientPort() {
+        if (secureCnxnFactory != null) {
+            return secureCnxnFactory.getLocalPort();
+        }
+        return 0;
+    }
+
 
     /**
      * Shutdowns properly the service, this method is not a public API.

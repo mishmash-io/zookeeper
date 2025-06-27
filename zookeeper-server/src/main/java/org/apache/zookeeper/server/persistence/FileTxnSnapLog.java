@@ -204,11 +204,11 @@ public class FileTxnSnapLog {
     }
 
     /**
-     * get the datadir used by this filetxn
+     * get the data log dir used by this filetxn
      * snap log
-     * @return the data dir
+     * @return the data log dir
      */
-    public File getDataDir() {
+    public File getDataLogDir() {
         return this.dataDir;
     }
 
@@ -313,7 +313,7 @@ public class FileTxnSnapLog {
     }
 
     /**
-     * This function will fast forward the server database to have the latest
+     * This function will fast-forward the server database to have the latest
      * transactions in it.  This is the same as restore, but only reads from
      * the transaction logs and not restores from a snapshot.
      * @param dt the datatree to write transactions to.
@@ -468,9 +468,10 @@ public class FileTxnSnapLog {
      * @param sessionsWithTimeouts the session timeouts to be
      * serialized onto disk
      * @param syncSnap sync the snapshot immediately after write
+     * @return the snapshot file
      * @throws IOException
      */
-    public void save(
+    public File save(
         DataTree dataTree,
         ConcurrentHashMap<Long, Integer> sessionsWithTimeouts,
         boolean syncSnap) throws IOException {
@@ -479,6 +480,7 @@ public class FileTxnSnapLog {
         LOG.info("Snapshotting: 0x{} to {}", Long.toHexString(lastZxid), snapshotFile);
         try {
             snapLog.serialize(dataTree, sessionsWithTimeouts, snapshotFile, syncSnap);
+            return snapshotFile;
         } catch (IOException e) {
             if (snapshotFile.length() == 0) {
                 /* This may be caused by a full disk. In such a case, the server
@@ -587,7 +589,7 @@ public class FileTxnSnapLog {
      * @throws IOException
      */
     public boolean append(Request si) throws IOException {
-        return txnLog.append(si.getHdr(), si.getTxn(), si.getTxnDigest());
+        return txnLog.append(si);
     }
 
     /**

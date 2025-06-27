@@ -168,6 +168,12 @@ public class FileTxnLog implements TxnLog, Closeable {
      */
     private long prevLogsRunningTotal;
 
+    long filePosition = 0;
+
+    private long unFlushedSize = 0;
+
+    private long fileSize = 0;
+
     /**
      * constructor for FileTxnLog. Take the directory
      * where the txnlogs are stored
@@ -208,7 +214,7 @@ public class FileTxnLog implements TxnLog, Closeable {
      */
     public synchronized long getCurrentLogSize() {
         if (logFileWrite != null) {
-            return logFileWrite.length();
+            return fileSize;
         }
         return 0;
     }
@@ -219,6 +225,13 @@ public class FileTxnLog implements TxnLog, Closeable {
 
     public synchronized long getTotalLogSize() {
         return prevLogsRunningTotal + getCurrentLogSize();
+    }
+
+    /**
+     * Get log size limit
+     */
+    public static long getTxnLogSizeLimit() {
+        return txnLogSizeLimit;
     }
 
     /**
@@ -239,7 +252,9 @@ public class FileTxnLog implements TxnLog, Closeable {
             prevLogsRunningTotal += getCurrentLogSize();
             this.logStream = null;
             oa = null;
-
+            fileSize = 0;
+            filePosition = 0;
+            unFlushedSize = 0;
             // Roll over the current log file into the running total
         }
     }
@@ -257,18 +272,9 @@ public class FileTxnLog implements TxnLog, Closeable {
         }
     }
 
-    /**
-     * append an entry to the transaction log
-     * @param hdr the header of the transaction
-     * @param txn the transaction part of the entry
-     * returns true iff something appended, otw false
-     */
-    public synchronized boolean append(TxnHeader hdr, Record txn) throws IOException {
-              return append(hdr, txn, null);
-    }
-
     @Override
-    public synchronized boolean append(TxnHeader hdr, Record txn, TxnDigest digest) throws IOException {
+    public synchronized boolean append(Request request) throws IOException {
+        TxnHeader hdr = request.getHdr();
         if (hdr == null) {
             return false;
         }
@@ -289,22 +295,34 @@ public class FileTxnLog implements TxnLog, Closeable {
             logStream = new BufferedOutputStream(fos);
             oa = BinaryOutputArchive.getArchive(logStream);
             FileHeader fhdr = new FileHeader(TXNLOG_MAGIC, VERSION, dbId);
+            long dataSize = oa.getDataSize();
             fhdr.serialize(oa, "fileheader");
             // Make sure that the magic number is written before padding.
             logStream.flush();
-            filePadding.setCurrentSize(fos.getChannel().position());
+            // Before writing data, first obtain the size of the OutputArchive.
+            // After writing the data, obtain the size of the OutputArchive again,
+            // so we can obtain the size of the data written this time.
+            // In this case, the data already flush into the channel, so add the size to filePosition.
+            filePosition += oa.getDataSize() - dataSize;
+            filePadding.setCurrentSize(filePosition);
             streamsToFlush.add(fos);
         }
-        filePadding.padFile(fos.getChannel());
-        byte[] buf = Util.marshallTxnEntry(hdr, txn, digest);
+        fileSize = filePadding.padFile(fos.getChannel(), filePosition);
+        byte[] buf = request.getSerializeData();
         if (buf == null || buf.length == 0) {
             throw new IOException("Faulty serialization for header " + "and txn");
         }
+        long dataSize = oa.getDataSize();
         Checksum crc = makeChecksumAlgorithm();
         crc.update(buf, 0, buf.length);
         oa.writeLong(crc.getValue(), "txnEntryCRC");
         Util.writeTxnBytes(oa, buf);
-
+        // Before writing data, first obtain the size of the OutputArchive.
+        // After writing the data, obtain the size of the OutputArchive again,
+        // so we can obtain the size of the data written this time.
+        // In this case, the data just write to the cache, not flushed, so add the size to unFlushedSize.
+        // After flushed, the unFlushedSize will add to the filePosition.
+        unFlushedSize += oa.getDataSize() - dataSize;
         return true;
     }
 
@@ -332,7 +350,7 @@ public class FileTxnLog implements TxnLog, Closeable {
                 logZxid = fzxid;
             }
         }
-        List<File> v = new ArrayList<File>(5);
+        List<File> v = new ArrayList<>(5);
         for (File f : files) {
             long fzxid = Util.getZxidFromName(f.getName(), LOG_FILE_PREFIX);
             if (fzxid < logZxid) {
@@ -376,6 +394,13 @@ public class FileTxnLog implements TxnLog, Closeable {
     public synchronized void commit() throws IOException {
         if (logStream != null) {
             logStream.flush();
+            filePosition += unFlushedSize;
+            // If we have written more than we have previously preallocated,
+            // we should override the fileSize by filePosition.
+            if (filePosition > fileSize) {
+                fileSize = filePosition;
+            }
+            unFlushedSize = 0;
         }
         for (FileOutputStream log : streamsToFlush) {
             log.flush();
@@ -683,14 +708,29 @@ public class FileTxnLog implements TxnLog, Closeable {
 
         /**
          * go to the next logfile
+         *
          * @return true if there is one and false if there is no
          * new file to be read
-         * @throws IOException
          */
         private boolean goToNextLog() throws IOException {
-            if (storedFiles.size() > 0) {
+            if (!storedFiles.isEmpty()) {
                 this.logFile = storedFiles.remove(storedFiles.size() - 1);
-                ia = createInputArchive(this.logFile);
+                try {
+                    ia = createInputArchive(this.logFile);
+                } catch (EOFException ex) {
+                    // If this file is the last log file in the database and is empty,
+                    // it means that the last time the file was created
+                    // before the header was written.
+                    if (storedFiles.isEmpty() && this.logFile.length() == 0) {
+                        boolean deleted = this.logFile.delete();
+                        if (!deleted) {
+                            throw new IOException("Failed to delete empty tail log file: " + this.logFile.getName());
+                        }
+                        LOG.warn("Delete empty tail log file to recover from corruption file: {}", this.logFile.getName());
+                        return false;
+                    }
+                    throw ex;
+                }
                 return true;
             }
             return false;

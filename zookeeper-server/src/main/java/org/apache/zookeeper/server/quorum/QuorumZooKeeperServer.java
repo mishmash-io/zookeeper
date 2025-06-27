@@ -20,7 +20,6 @@ package org.apache.zookeeper.server.quorum;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -33,10 +32,12 @@ import org.apache.zookeeper.common.ByteBufferInputStream;
 import org.apache.zookeeper.metrics.provider.MetricsContext;
 import org.apache.zookeeper.proto.CreateRequest;
 import org.apache.zookeeper.server.Request;
+import org.apache.zookeeper.server.RequestRecord;
 import org.apache.zookeeper.server.ServerMetrics;
 import org.apache.zookeeper.server.ZKDatabase;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
+import org.apache.zookeeper.txn.CreateSessionTxn;
 
 /**
  * Abstract base class for all ZooKeeperServers that participate in
@@ -77,10 +78,7 @@ public abstract class QuorumZooKeeperServer extends ZooKeeperServer {
         }
 
         if (OpCode.multi == request.type) {
-            MultiOperationRecord multiTransactionRecord = new MultiOperationRecord();
-            request.request.rewind();
-            ByteBufferInputStream.byteBuffer2Record(request.request, multiTransactionRecord);
-            request.request.rewind();
+            MultiOperationRecord multiTransactionRecord = request.readRequestRecord(MultiOperationRecord::new);
             boolean containsEphemeralCreate = false;
             for (Op op : multiTransactionRecord) {
                 if (op.getType() == OpCode.create || op.getType() == OpCode.create2) {
@@ -96,10 +94,7 @@ public abstract class QuorumZooKeeperServer extends ZooKeeperServer {
                 return null;
             }
         } else {
-            CreateRequest createRequest = new CreateRequest();
-            request.request.rewind();
-            ByteBufferInputStream.byteBuffer2Record(request.request, createRequest);
-            request.request.rewind();
+            CreateRequest createRequest = request.readRequestRecord(CreateRequest::new);
             CreateMode createMode = CreateMode.fromFlag(createRequest.getFlags());
             if (!createMode.isEphemeral()) {
                 return null;
@@ -121,9 +116,8 @@ public abstract class QuorumZooKeeperServer extends ZooKeeperServer {
         synchronized (upgradeableSessionTracker) {
             if (upgradeableSessionTracker.isLocalSession(sessionId)) {
                 int timeout = upgradeableSessionTracker.upgradeSession(sessionId);
-                ByteBuffer to = ByteBuffer.allocate(4);
-                to.putInt(timeout);
-                return new Request(null, sessionId, 0, OpCode.createSession, to, null);
+                CreateSessionTxn txn = new CreateSessionTxn(timeout);
+                return new Request(null, sessionId, 0, OpCode.createSession, RequestRecord.fromRecord(txn), null);
             }
         }
         return null;

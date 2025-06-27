@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,8 +32,10 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.Watcher.Event.EventType;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
+import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.server.ServerCnxn;
 import org.apache.zookeeper.server.ServerMetrics;
+import org.apache.zookeeper.server.ServerWatcher;
 import org.apache.zookeeper.server.util.BitHashSet;
 import org.apache.zookeeper.server.util.BitMap;
 import org.slf4j.Logger;
@@ -55,10 +58,10 @@ public class WatchManagerOptimized implements IWatchManager, IDeadWatcherListene
 
     private static final Logger LOG = LoggerFactory.getLogger(WatchManagerOptimized.class);
 
-    private final ConcurrentHashMap<String, BitHashSet> pathWatches = new ConcurrentHashMap<String, BitHashSet>();
+    private final ConcurrentHashMap<String, BitHashSet> pathWatches = new ConcurrentHashMap<>();
 
     // watcher to bit id mapping
-    private final BitMap<Watcher> watcherBitIdMap = new BitMap<Watcher>();
+    private final BitMap<Watcher> watcherBitIdMap = new BitMap<>();
 
     // used to lazily remove the dead watchers
     private final WatcherCleaner watcherCleaner;
@@ -202,13 +205,13 @@ public class WatchManagerOptimized implements IWatchManager, IDeadWatcherListene
     }
 
     @Override
-    public WatcherOrBitSet triggerWatch(String path, EventType type) {
-        return triggerWatch(path, type, null);
+    public WatcherOrBitSet triggerWatch(String path, EventType type, long zxid, List<ACL> acl) {
+        return triggerWatch(path, type, zxid, acl, null);
     }
 
     @Override
-    public WatcherOrBitSet triggerWatch(String path, EventType type, WatcherOrBitSet suppress) {
-        WatchedEvent e = new WatchedEvent(type, KeeperState.SyncConnected, path);
+    public WatcherOrBitSet triggerWatch(String path, EventType type, long zxid, List<ACL> acl, WatcherOrBitSet suppress) {
+        WatchedEvent e = new WatchedEvent(type, KeeperState.SyncConnected, path, zxid);
 
         BitHashSet watchers = remove(path);
         if (watchers == null) {
@@ -232,7 +235,11 @@ public class WatchManagerOptimized implements IWatchManager, IDeadWatcherListene
                     continue;
                 }
 
-                w.process(e);
+                if (w instanceof ServerWatcher) {
+                    ((ServerWatcher) w).process(e, acl);
+                } else {
+                    w.process(e);
+                }
                 triggeredWatches++;
             }
         }
@@ -304,10 +311,10 @@ public class WatchManagerOptimized implements IWatchManager, IDeadWatcherListene
 
     @Override
     public WatchesReport getWatches() {
-        Map<Long, Set<String>> id2paths = new HashMap<Long, Set<String>>();
+        Map<Long, Set<String>> id2paths = new HashMap<>();
         for (Entry<Watcher, Set<String>> e : getWatcher2PathesMap().entrySet()) {
             Long id = ((ServerCnxn) e.getKey()).getSessionId();
-            Set<String> paths = new HashSet<String>(e.getValue());
+            Set<String> paths = new HashSet<>(e.getValue());
             id2paths.put(id, paths);
         }
         return new WatchesReport(id2paths);
@@ -321,11 +328,11 @@ public class WatchManagerOptimized implements IWatchManager, IDeadWatcherListene
      */
     @Override
     public WatchesPathReport getWatchesByPath() {
-        Map<String, Set<Long>> path2ids = new HashMap<String, Set<Long>>();
+        Map<String, Set<Long>> path2ids = new HashMap<>();
         for (Entry<String, BitHashSet> e : pathWatches.entrySet()) {
             BitHashSet watchers = e.getValue();
             synchronized (watchers) {
-                Set<Long> ids = new HashSet<Long>(watchers.size());
+                Set<Long> ids = new HashSet<>(watchers.size());
                 path2ids.put(e.getKey(), ids);
                 for (Integer wbit : watchers) {
                     Watcher watcher = watcherBitIdMap.get(wbit);
@@ -343,7 +350,7 @@ public class WatchManagerOptimized implements IWatchManager, IDeadWatcherListene
      * it in this class.
      */
     public Map<Watcher, Set<String>> getWatcher2PathesMap() {
-        Map<Watcher, Set<String>> watcher2paths = new HashMap<Watcher, Set<String>>();
+        Map<Watcher, Set<String>> watcher2paths = new HashMap<>();
         for (Entry<String, BitHashSet> e : pathWatches.entrySet()) {
             String path = e.getKey();
             BitHashSet watchers = e.getValue();
@@ -355,7 +362,7 @@ public class WatchManagerOptimized implements IWatchManager, IDeadWatcherListene
                         continue;
                     }
                     if (!watcher2paths.containsKey(w)) {
-                        watcher2paths.put(w, new HashSet<String>());
+                        watcher2paths.put(w, new HashSet<>());
                     }
                     watcher2paths.get(w).add(path);
                 }

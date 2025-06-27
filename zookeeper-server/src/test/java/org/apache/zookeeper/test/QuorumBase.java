@@ -183,7 +183,7 @@ public class QuorumBase extends ClientBase {
         int initLimit = 3;
         int syncLimit = 3;
         int connectToLearnerMasterLimit = 3;
-        Map<Long, QuorumServer> peers = new HashMap<Long, QuorumServer>();
+        Map<Long, QuorumServer> peers = new HashMap<>();
         peers.put(Long.valueOf(1), new QuorumServer(1, new InetSocketAddress(LOCALADDR, port1), new InetSocketAddress(LOCALADDR, portLE1), new InetSocketAddress(LOCALADDR, portClient1), LearnerType.PARTICIPANT));
         peers.put(Long.valueOf(2), new QuorumServer(2, new InetSocketAddress(LOCALADDR, port2), new InetSocketAddress(LOCALADDR, portLE2), new InetSocketAddress(LOCALADDR, portClient2), LearnerType.PARTICIPANT));
         peers.put(Long.valueOf(3), new QuorumServer(3, new InetSocketAddress(LOCALADDR, port3), new InetSocketAddress(LOCALADDR, portLE3), new InetSocketAddress(LOCALADDR, portClient3), LearnerType.PARTICIPANT));
@@ -279,7 +279,7 @@ public class QuorumBase extends ClientBase {
         // interesting to see what's there...
         JMXEnv.dump();
         // make sure we have these 5 servers listed
-        Set<String> ensureNames = new LinkedHashSet<String>();
+        Set<String> ensureNames = new LinkedHashSet<>();
         for (int i = 1; i <= 5; i++) {
             ensureNames.add("InMemoryDataTree");
         }
@@ -342,6 +342,21 @@ public class QuorumBase extends ClientBase {
       return null;
     }
 
+    public File getLeaderDataDir() {
+        if (s1.getPeerState() == ServerState.LEADING) {
+            return s1dir;
+        } else if (s2.getPeerState() == ServerState.LEADING) {
+            return s2dir;
+        } else if (s3.getPeerState() == ServerState.LEADING) {
+            return s3dir;
+        } else if (s4.getPeerState() == ServerState.LEADING) {
+            return s4dir;
+        } else if (s5.getPeerState() == ServerState.LEADING) {
+            return s5dir;
+        }
+        return null;
+    }
+
     public QuorumPeer getFirstObserver() {
       if (s1.getLearnerType() == LearnerType.OBSERVER) {
         return s1;
@@ -384,7 +399,7 @@ public class QuorumBase extends ClientBase {
     }
 
     public ArrayList<QuorumPeer> getPeerList() {
-        ArrayList<QuorumPeer> peers = new ArrayList<QuorumPeer>();
+        ArrayList<QuorumPeer> peers = new ArrayList<>();
         peers.add(s1);
         peers.add(s2);
         peers.add(s3);
@@ -418,7 +433,7 @@ public class QuorumBase extends ClientBase {
         int connectToLearnerMasterLimit = 3;
 
         if (peers == null) {
-            peers = new HashMap<Long, QuorumServer>();
+            peers = new HashMap<>();
 
             peers.put(Long.valueOf(1), new QuorumServer(1, new InetSocketAddress(LOCALADDR, port1), new InetSocketAddress(LOCALADDR, portLE1), new InetSocketAddress(LOCALADDR, portClient1), LearnerType.PARTICIPANT));
             peers.put(Long.valueOf(2), new QuorumServer(2, new InetSocketAddress(LOCALADDR, port2), new InetSocketAddress(LOCALADDR, portLE2), new InetSocketAddress(LOCALADDR, portClient2), LearnerType.PARTICIPANT));

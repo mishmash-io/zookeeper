@@ -647,8 +647,8 @@ public class FastLeaderElection implements Election {
         proposedLeader = -1;
         proposedZxid = -1;
 
-        sendqueue = new LinkedBlockingQueue<ToSend>();
-        recvqueue = new LinkedBlockingQueue<Notification>();
+        sendqueue = new LinkedBlockingQueue<>();
+        recvqueue = new LinkedBlockingQueue<>();
         this.messenger = new Messenger(manager);
     }
 
@@ -703,14 +703,14 @@ public class FastLeaderElection implements Election {
                 qv.toString().getBytes(UTF_8));
 
             LOG.debug(
-                "Sending Notification: {} (n.leader), 0x{} (n.zxid), 0x{} (n.round), {} (recipient),"
-                    + " {} (myid), 0x{} (n.peerEpoch) ",
+                "Sending Notification: {} (n.leader), 0x{} (n.zxid), 0x{} (n.peerEpoch), 0x{} (n.round), {} (recipient),"
+                    + " {} (myid) ",
                 proposedLeader,
                 Long.toHexString(proposedZxid),
+                Long.toHexString(proposedEpoch),
                 Long.toHexString(logicalclock.get()),
                 sid,
-                self.getMyId(),
-                Long.toHexString(proposedEpoch));
+                self.getMyId());
 
             sendqueue.offer(notmsg);
         }
@@ -723,12 +723,13 @@ public class FastLeaderElection implements Election {
      */
     protected boolean totalOrderPredicate(long newId, long newZxid, long newEpoch, long curId, long curZxid, long curEpoch) {
         LOG.debug(
-            "id: {}, proposed id: {}, zxid: 0x{}, proposed zxid: 0x{}",
+            "id: {}, proposed id: {}, zxid: 0x{}, proposed zxid: 0x{}, epoch: 0x{}, proposed epoch: 0x{}",
             newId,
             curId,
             Long.toHexString(newZxid),
-            Long.toHexString(curZxid));
-
+            Long.toHexString(curZxid),
+            Long.toHexString(newEpoch),
+            Long.toHexString(curEpoch));
         if (self.getQuorumVerifier().getWeight(newId) == 0) {
             return false;
         }
@@ -926,7 +927,7 @@ public class FastLeaderElection implements Election {
              * if v.electionEpoch == logicalclock. The current participant uses recvset to deduce on whether a majority
              * of participants has voted for it.
              */
-            Map<Long, Vote> recvset = new HashMap<Long, Vote>();
+            Map<Long, Vote> recvset = new HashMap<>();
 
             /*
              * The votes from previous leader elections, as well as the votes from the current leader election are
@@ -935,7 +936,7 @@ public class FastLeaderElection implements Election {
              * outofelection to learn which participant is the leader if it arrives late (i.e., higher logicalclock than
              * the electionEpoch of the received notifications) in a leader election.
              */
-            Map<Long, Vote> outofelection = new HashMap<Long, Vote>();
+            Map<Long, Vote> outofelection = new HashMap<>();
 
             int notTimeout = minNotificationInterval;
 

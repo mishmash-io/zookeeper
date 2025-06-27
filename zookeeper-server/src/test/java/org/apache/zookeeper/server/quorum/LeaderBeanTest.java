@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
@@ -42,12 +43,12 @@ import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.apache.zookeeper.server.quorum.QuorumPeer.LearnerType;
 import org.apache.zookeeper.server.quorum.QuorumPeer.QuorumServer;
 import org.apache.zookeeper.server.quorum.flexible.QuorumVerifier;
-import org.apache.zookeeper.server.util.SerializeUtils;
 import org.apache.zookeeper.test.ClientBase;
 import org.apache.zookeeper.txn.TxnHeader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -62,7 +63,7 @@ public class LeaderBeanTest {
 
     public static Map<Long, QuorumServer> getMockedPeerViews(long myId) {
         int clientPort = PortAssignment.unique();
-        Map<Long, QuorumServer> peersView = new HashMap<Long, QuorumServer>();
+        Map<Long, QuorumServer> peersView = new HashMap<>();
         InetAddress clientIP = InetAddress.getLoopbackAddress();
 
         peersView.put(Long.valueOf(myId),
@@ -91,6 +92,15 @@ public class LeaderBeanTest {
     @AfterEach
     public void tearDown() throws IOException {
         fileTxnSnapLog.close();
+    }
+
+    @Test
+    public void testCreateServerSocketWillRecreateInetSocketAddr() {
+        Leader spyLeader = Mockito.spy(leader);
+        InetSocketAddress addr = new InetSocketAddress("localhost", PortAssignment.unique());
+        spyLeader.createServerSocket(addr, false, false);
+        // make sure the address to be bound will be recreated with expected hostString and port
+        Mockito.verify(spyLeader, times(1)).recreateInetSocketAddr(addr.getHostString(), addr.getPort());
     }
 
     @Test
@@ -125,7 +135,7 @@ public class LeaderBeanTest {
         leader.propose(req);
 
         // Assert
-        byte[] data = SerializeUtils.serializeRequest(req);
+        byte[] data = req.getSerializeData();
         assertEquals(data.length, leaderBean.getLastProposalSize());
         assertEquals(data.length, leaderBean.getMinProposalSize());
         assertEquals(data.length, leaderBean.getMaxProposalSize());
@@ -174,7 +184,7 @@ public class LeaderBeanTest {
 
     @Test
     public void testFollowerInfo() throws IOException {
-        Map<Long, QuorumServer> votingMembers = new HashMap<Long, QuorumServer>();
+        Map<Long, QuorumServer> votingMembers = new HashMap<>();
         votingMembers.put(1L, null);
         votingMembers.put(2L, null);
         votingMembers.put(3L, null);

@@ -42,6 +42,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.security.auth.login.LoginException;
 import javax.security.sasl.SaslException;
 import org.apache.jute.BinaryInputArchive;
@@ -140,7 +141,7 @@ public class ClientCnxn {
 
     }
 
-    private final CopyOnWriteArraySet<AuthData> authInfo = new CopyOnWriteArraySet<AuthData>();
+    private final CopyOnWriteArraySet<AuthData> authInfo = new CopyOnWriteArraySet<>();
 
     /**
      * These are the packets that have been sent and are waiting for a response.
@@ -150,7 +151,7 @@ public class ClientCnxn {
     /**
      * These are the packets that need to be sent.
      */
-    private final LinkedBlockingDeque<Packet> outgoingQueue = new LinkedBlockingDeque<Packet>();
+    private final LinkedBlockingDeque<Packet> outgoingQueue = new LinkedBlockingDeque<>();
 
     private int connectTimeout;
 
@@ -163,6 +164,8 @@ public class ClientCnxn {
     private volatile int negotiatedSessionTimeout;
 
     private int readTimeout;
+
+    private int expirationTimeout;
 
     private final int sessionTimeout;
 
@@ -285,8 +288,6 @@ public class ClientCnxn {
 
         WatchRegistration watchRegistration;
 
-        public boolean readOnly;
-
         WatchDeregistration watchDeregistration;
 
         /** Convenience ctor */
@@ -295,23 +296,12 @@ public class ClientCnxn {
             ReplyHeader replyHeader,
             Record request,
             Record response,
-            WatchRegistration watchRegistration) {
-            this(requestHeader, replyHeader, request, response, watchRegistration, false);
-        }
-
-        Packet(
-            RequestHeader requestHeader,
-            ReplyHeader replyHeader,
-            Record request,
-            Record response,
-            WatchRegistration watchRegistration,
-            boolean readOnly) {
-
+            WatchRegistration watchRegistration
+        ) {
             this.requestHeader = requestHeader;
             this.replyHeader = replyHeader;
             this.request = request;
             this.response = response;
-            this.readOnly = readOnly;
             this.watchRegistration = watchRegistration;
         }
 
@@ -325,8 +315,6 @@ public class ClientCnxn {
                 }
                 if (request instanceof ConnectRequest) {
                     request.serialize(boa, "connect");
-                    // append "am-I-allowed-to-be-readonly" flag
-                    boa.writeBool(readOnly, "readOnly");
                 } else if (request != null) {
                     request.serialize(boa, "request");
                 }
@@ -433,6 +421,7 @@ public class ClientCnxn {
 
         this.connectTimeout = sessionTimeout / hostProvider.size();
         this.readTimeout = sessionTimeout * 2 / 3;
+        this.expirationTimeout = sessionTimeout * 4 / 3;
 
         this.sendThread = new SendThread(clientCnxnSocket);
         this.eventThread = new EventThread();
@@ -480,7 +469,7 @@ public class ClientCnxn {
 
     class EventThread extends ZooKeeperThread {
 
-        private final LinkedBlockingQueue<Object> waitingEvents = new LinkedBlockingQueue<Object>();
+        private final LinkedBlockingQueue<Object> waitingEvents = new LinkedBlockingQueue<>();
 
         /** This is really the queued session state until the event
          * thread actually processes the event and hands it to the watcher.
@@ -829,6 +818,12 @@ public class ClientCnxn {
 
     }
 
+    private static class ConnectionTimeoutException extends IOException {
+        public ConnectionTimeoutException(String message) {
+            super(message);
+        }
+    }
+
     private static class SessionTimeoutException extends IOException {
 
         private static final long serialVersionUID = 824482094072071178L;
@@ -869,6 +864,7 @@ public class ClientCnxn {
         private final ClientCnxnSocket clientCnxnSocket;
         private boolean isFirstConnect = true;
         private volatile ZooKeeperSaslClient zooKeeperSaslClient;
+        private final AtomicReference<Login> loginRef = new AtomicReference<>();
 
         private String stripChroot(String serverPath) {
             if (serverPath.startsWith(chrootPath)) {
@@ -917,7 +913,7 @@ public class ClientCnxn {
                     event.setPath(clientPath);
                 }
 
-                WatchedEvent we = new WatchedEvent(event);
+                WatchedEvent we = new WatchedEvent(event, replyHdr.getZxid());
                 LOG.debug("Got {} for session id 0x{}", we, Long.toHexString(sessionId));
                 eventThread.queueEvent(we);
                 return;
@@ -1014,7 +1010,7 @@ public class ClientCnxn {
                 clientCnxnSocket.getRemoteSocketAddress());
             isFirstConnect = false;
             long sessId = (seenRwServerBefore) ? sessionId : 0;
-            ConnectRequest conReq = new ConnectRequest(0, lastZxid, sessionTimeout, sessId, sessionPasswd);
+            ConnectRequest conReq = new ConnectRequest(0, lastZxid, sessionTimeout, sessId, sessionPasswd, readOnly);
             // We add backwards since we are pushing into the front
             // Only send if there's a pending watch
             if (!clientConfig.getBoolean(ZKClientConfig.DISABLE_AUTO_WATCH_RESET)) {
@@ -1034,11 +1030,11 @@ public class ClientCnxn {
 
                     while (dataWatchesIter.hasNext() || existWatchesIter.hasNext() || childWatchesIter.hasNext()
                             || persistentWatchesIter.hasNext() || persistentRecursiveWatchesIter.hasNext()) {
-                        List<String> dataWatchesBatch = new ArrayList<String>();
-                        List<String> existWatchesBatch = new ArrayList<String>();
-                        List<String> childWatchesBatch = new ArrayList<String>();
-                        List<String> persistentWatchesBatch = new ArrayList<String>();
-                        List<String> persistentRecursiveWatchesBatch = new ArrayList<String>();
+                        List<String> dataWatchesBatch = new ArrayList<>();
+                        List<String> existWatchesBatch = new ArrayList<>();
+                        List<String> childWatchesBatch = new ArrayList<>();
+                        List<String> persistentWatchesBatch = new ArrayList<>();
+                        List<String> persistentRecursiveWatchesBatch = new ArrayList<>();
                         int batchLength = 0;
 
                         // Note, we may exceed our max length by a bit when we add the last
@@ -1094,7 +1090,7 @@ public class ClientCnxn {
                         null,
                         null));
             }
-            outgoingQueue.addFirst(new Packet(null, null, conReq, null, null, readOnly));
+            outgoingQueue.addFirst(new Packet(null, null, conReq, null, null));
             clientCnxnSocket.connectionPrimed();
             LOG.debug("Session establishment request sent on {}", clientCnxnSocket.getRemoteSocketAddress());
         }
@@ -1151,10 +1147,8 @@ public class ClientCnxn {
             setName(getName().replaceAll("\\(.*\\)", "(" + hostPort + ")"));
             if (clientConfig.isSaslClientEnabled()) {
                 try {
-                    if (zooKeeperSaslClient != null) {
-                        zooKeeperSaslClient.shutdown();
-                    }
-                    zooKeeperSaslClient = new ZooKeeperSaslClient(SaslServerPrincipal.getServerPrincipal(addr, clientConfig), clientConfig);
+                    zooKeeperSaslClient = new ZooKeeperSaslClient(
+                        SaslServerPrincipal.getServerPrincipal(addr, clientConfig), clientConfig, loginRef);
                 } catch (LoginException e) {
                     // An authentication error occurred when the SASL client tried to initialize:
                     // for Kerberos this means that the client failed to authenticate with the KDC.
@@ -1207,7 +1201,7 @@ public class ClientCnxn {
                         startConnect(serverAddress);
                         // Update now to start the connection timer right after we make a connection attempt
                         clientCnxnSocket.updateNow();
-                        clientCnxnSocket.updateLastSendAndHeard();
+                        clientCnxnSocket.updateLastSend();
                     }
 
                     if (state.isConnected()) {
@@ -1245,16 +1239,24 @@ public class ClientCnxn {
                         }
                         to = readTimeout - clientCnxnSocket.getIdleRecv();
                     } else {
-                        to = connectTimeout - clientCnxnSocket.getIdleRecv();
+                        to = connectTimeout - clientCnxnSocket.getIdleSend();
                     }
 
-                    if (to <= 0) {
+                    int expiration = expirationTimeout - clientCnxnSocket.getIdleRecv();
+                    if (expiration <= 0) {
                         String warnInfo = String.format(
                             "Client session timed out, have not heard from server in %dms for session id 0x%s",
                             clientCnxnSocket.getIdleRecv(),
                             Long.toHexString(sessionId));
                         LOG.warn(warnInfo);
+                        changeZkState(States.CLOSED);
                         throw new SessionTimeoutException(warnInfo);
+                    } else if (to <= 0) {
+                        String warnInfo = String.format(
+                            "Client connection timed out, have not heard from server in %dms for session id 0x%s",
+                            clientCnxnSocket.getIdleRecv(),
+                            Long.toHexString(sessionId));
+                        throw new ConnectionTimeoutException(warnInfo);
                     }
                     if (state.isConnected()) {
                         //1000(1 second) is to prevent race condition missing to send the second ping
@@ -1299,7 +1301,7 @@ public class ClientCnxn {
                     } else {
                         LOG.warn(
                             "Session 0x{} for server {}, Closing socket connection. "
-                                + "Attempting reconnect except it is a SessionExpiredException.",
+                                + "Attempting reconnect except it is a SessionExpiredException or SessionTimeoutException.",
                             Long.toHexString(getSessionId()),
                             serverAddress,
                             e);
@@ -1320,10 +1322,16 @@ public class ClientCnxn {
             if (state.isAlive()) {
                 eventThread.queueEvent(new WatchedEvent(Event.EventType.None, Event.KeeperState.Disconnected, null));
             }
-            eventThread.queueEvent(new WatchedEvent(Event.EventType.None, Event.KeeperState.Closed, null));
+            if (closing) {
+                eventThread.queueEvent(new WatchedEvent(Event.EventType.None, KeeperState.Closed, null));
+            } else if (state == States.CLOSED) {
+                eventThread.queueEvent(new WatchedEvent(Event.EventType.None, KeeperState.Expired, null));
+            }
+            eventThread.queueEventOfDeath();
 
-            if (zooKeeperSaslClient != null) {
-                zooKeeperSaslClient.shutdown();
+            Login l = loginRef.getAndSet(null);
+            if (l != null) {
+                l.shutdown();
             }
             Trace.logTraceMessage(
                 LOG,
@@ -1337,7 +1345,6 @@ public class ClientCnxn {
                 eventThread.queueEvent(new WatchedEvent(Event.EventType.None, Event.KeeperState.Disconnected, null));
             }
             clientCnxnSocket.updateNow();
-            clientCnxnSocket.updateLastSendAndHeard();
         }
 
         private void pingRwServer() throws RWServerFoundException {
@@ -1412,12 +1419,6 @@ public class ClientCnxn {
         /**
          * Callback invoked by the ClientCnxnSocket once a connection has been
          * established.
-         *
-         * @param _negotiatedSessionTimeout
-         * @param _sessionId
-         * @param _sessionPasswd
-         * @param isRO
-         * @throws IOException
          */
         void onConnected(
             int _negotiatedSessionTimeout,
@@ -1443,6 +1444,7 @@ public class ClientCnxn {
             }
 
             readTimeout = negotiatedSessionTimeout * 2 / 3;
+            expirationTimeout = negotiatedSessionTimeout * 4 / 3;
             connectTimeout = negotiatedSessionTimeout / hostProvider.size();
             hostProvider.onConnected();
             sessionId = _sessionId;
@@ -1500,6 +1502,11 @@ public class ClientCnxn {
 
         public ZooKeeperSaslClient getZooKeeperSaslClient() {
             return zooKeeperSaslClient;
+        }
+
+        // VisibleForTesting
+        Login getLogin() {
+            return loginRef.get();
         }
     }
 
@@ -1635,7 +1642,7 @@ public class ClientCnxn {
         ReplyHeader r = new ReplyHeader();
         r.setXid(xid);
 
-        Packet p = new Packet(h, r, request, response, null, false);
+        Packet p = new Packet(h, r, request, response, null);
         p.cb = cb;
         sendThread.sendPacket(p);
     }

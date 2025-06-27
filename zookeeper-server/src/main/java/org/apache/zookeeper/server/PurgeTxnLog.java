@@ -110,7 +110,7 @@ public class PurgeTxnLog {
          * recoverability of all snapshots being retained.  We determine that log file here by
          * calling txnLog.getSnapshotLogs().
          */
-        final Set<File> retainedTxnLogs = new HashSet<File>();
+        final Set<File> retainedTxnLogs = new HashSet<>();
         retainedTxnLogs.addAll(Arrays.asList(txnLog.getSnapshotLogs(leastZxidToBeRetain)));
 
         /**
@@ -136,7 +136,7 @@ public class PurgeTxnLog {
 
         }
         // add all non-excluded log files
-        File[] logs = txnLog.getDataDir().listFiles(new MyFileFilter(PREFIX_LOG));
+        File[] logs = txnLog.getDataLogDir().listFiles(new MyFileFilter(PREFIX_LOG));
         List<File> files = new ArrayList<>();
         if (logs != null) {
             files.addAll(Arrays.asList(logs));

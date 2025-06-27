@@ -30,17 +30,22 @@ import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.cert.Certificate;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.jute.BinaryInputArchive;
 import org.apache.jute.Record;
 import org.apache.zookeeper.ClientCnxn;
+import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.ZooDefs;
+import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.data.Stat;
+import org.apache.zookeeper.proto.ConnectRequest;
 import org.apache.zookeeper.proto.ReplyHeader;
+import org.apache.zookeeper.proto.RequestHeader;
 import org.apache.zookeeper.proto.WatcherEvent;
 import org.apache.zookeeper.server.NIOServerCnxnFactory.SelectorThread;
 import org.apache.zookeeper.server.command.CommandExecutor;
@@ -72,7 +77,7 @@ public class NIOServerCnxn extends ServerCnxn {
 
     protected ByteBuffer incomingBuffer = lenBuffer;
 
-    private final Queue<ByteBuffer> outgoingBuffers = new LinkedBlockingQueue<ByteBuffer>();
+    private final Queue<ByteBuffer> outgoingBuffers = new LinkedBlockingQueue<>();
 
     private int sessionTimeout;
 
@@ -391,7 +396,10 @@ public class NIOServerCnxn extends ServerCnxn {
     }
 
     protected void readRequest() throws IOException {
-        zkServer.processPacket(this, incomingBuffer);
+        RequestHeader h = new RequestHeader();
+        ByteBufferInputStream.byteBuffer2Record(incomingBuffer, h);
+        RequestRecord request = RequestRecord.fromBytes(incomingBuffer.slice());
+        zkServer.processPacket(this, h, request);
     }
 
     // returns whether we are interested in writing, which is determined
@@ -427,11 +435,13 @@ public class NIOServerCnxn extends ServerCnxn {
         }
     }
 
-    private void readConnectRequest() throws IOException, InterruptedException, ClientCnxnLimitException {
+    private void readConnectRequest() throws IOException, ClientCnxnLimitException {
         if (!isZKServerRunning()) {
             throw new IOException("ZooKeeperServer not running");
         }
-        zkServer.processConnectRequest(this, incomingBuffer);
+        BinaryInputArchive bia = BinaryInputArchive.getArchive(new ByteBufferInputStream(incomingBuffer));
+        ConnectRequest request = protocolManager.deserializeConnectRequest(bia);
+        zkServer.processConnectRequest(this, request);
         initialized = true;
     }
 
@@ -697,8 +707,19 @@ public class NIOServerCnxn extends ServerCnxn {
      * @see org.apache.zookeeper.server.ServerCnxnIface#process(org.apache.zookeeper.proto.WatcherEvent)
      */
     @Override
-    public void process(WatchedEvent event) {
-        ReplyHeader h = new ReplyHeader(ClientCnxn.NOTIFICATION_XID, -1L, 0);
+    public void process(WatchedEvent event, List<ACL> znodeAcl) {
+        try {
+            zkServer.checkACL(this, znodeAcl, ZooDefs.Perms.READ, getAuthInfo(), event.getPath(), null);
+        } catch (KeeperException.NoAuthException e) {
+            if (LOG.isTraceEnabled()) {
+                ZooTrace.logTraceMessage(
+                    LOG,
+                    ZooTrace.EVENT_DELIVERY_TRACE_MASK,
+                    "Not delivering event " + event + " to 0x" + Long.toHexString(this.sessionId) + " (filtered by ACL)");
+            }
+            return;
+        }
+        ReplyHeader h = new ReplyHeader(ClientCnxn.NOTIFICATION_XID, event.getZxid(), 0);
         if (LOG.isTraceEnabled()) {
             ZooTrace.logTraceMessage(
                 LOG,

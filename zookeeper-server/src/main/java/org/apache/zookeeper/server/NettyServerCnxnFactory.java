@@ -48,8 +48,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,19 +56,17 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
-import javax.net.ssl.X509KeyManager;
-import javax.net.ssl.X509TrustManager;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.common.ClientX509Util;
 import org.apache.zookeeper.common.ConfigException;
 import org.apache.zookeeper.common.NettyUtils;
-import org.apache.zookeeper.common.SSLContextAndOptions;
 import org.apache.zookeeper.common.X509Exception;
 import org.apache.zookeeper.common.X509Exception.SSLContextException;
+import org.apache.zookeeper.common.ZKConfig;
 import org.apache.zookeeper.server.NettyServerCnxn.HandshakeState;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.apache.zookeeper.server.auth.X509AuthenticationProvider;
@@ -124,6 +120,8 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
     private static final AttributeKey<NettyServerCnxn> CONNECTION_ATTRIBUTE = AttributeKey.valueOf("NettyServerCnxn");
 
     private static final AtomicReference<ByteBufAllocator> TEST_ALLOCATOR = new AtomicReference<>(null);
+
+    public static final String CLIENT_CERT_RELOAD_KEY = "zookeeper.client.certReload";
 
     /**
      * A handler that detects whether the client would like to use
@@ -515,6 +513,17 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
     NettyServerCnxnFactory() {
         x509Util = new ClientX509Util();
 
+        boolean useClientReload = Boolean.getBoolean(CLIENT_CERT_RELOAD_KEY);
+        LOG.info("{}={}", CLIENT_CERT_RELOAD_KEY, useClientReload);
+        if (useClientReload) {
+            try {
+                x509Util.enableCertFileReloading();
+            } catch (IOException e) {
+                LOG.error("unable to set up client certificate reload filewatcher", e);
+                useClientReload = false;
+            }
+        }
+
         boolean usePortUnification = Boolean.getBoolean(PORT_UNIFICATION_KEY);
 
         LOG.info("{}={}", PORT_UNIFICATION_KEY, usePortUnification);
@@ -561,14 +570,13 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
         this.bootstrap.validate();
     }
 
-    private synchronized void initSSL(ChannelPipeline p, boolean supportPlaintext) throws X509Exception, KeyManagementException, NoSuchAlgorithmException {
+    private synchronized void initSSL(ChannelPipeline p, boolean supportPlaintext)
+        throws X509Exception, SSLException {
         String authProviderProp = System.getProperty(x509Util.getSslAuthProviderProperty());
         SslContext nettySslContext;
         if (authProviderProp == null) {
-            SSLContextAndOptions sslContextAndOptions = x509Util.getDefaultSSLContextAndOptions();
-            nettySslContext = sslContextAndOptions.createNettyJdkSslContext(sslContextAndOptions.getSSLContext());
+            nettySslContext = x509Util.createNettySslContextForServer(new ZKConfig());
         } else {
-            SSLContext sslContext = SSLContext.getInstance(ClientX509Util.DEFAULT_PROTOCOL);
             X509AuthenticationProvider authProvider = (X509AuthenticationProvider) ProviderRegistry.getProvider(
                 System.getProperty(x509Util.getSslAuthProviderProperty(), "x509"));
 
@@ -577,8 +585,8 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
                 throw new SSLContextException("Could not create SSLContext with specified auth provider: " + authProviderProp);
             }
 
-            sslContext.init(new X509KeyManager[]{authProvider.getKeyManager()}, new X509TrustManager[]{authProvider.getTrustManager()}, null);
-            nettySslContext = x509Util.getDefaultSSLContextAndOptions().createNettyJdkSslContext(sslContext);
+            nettySslContext = x509Util.createNettySslContextForServer(
+                new ZKConfig(), authProvider.getKeyManager(), authProvider.getTrustManager());
         }
 
         if (supportPlaintext) {
@@ -797,7 +805,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
     @Override
     public Iterable<Map<String, Object>> getAllConnectionInfo(boolean brief) {
-        Set<Map<String, Object>> info = new HashSet<Map<String, Object>>();
+        Set<Map<String, Object>> info = new HashSet<>();
         // No need to synchronize since cnxns is backed by a ConcurrentHashMap
         for (ServerCnxn c : cnxns) {
             info.add(c.getConnectionInfo(brief));
