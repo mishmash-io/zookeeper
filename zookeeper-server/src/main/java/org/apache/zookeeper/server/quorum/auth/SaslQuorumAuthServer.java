@@ -49,7 +49,7 @@ public class SaslQuorumAuthServer implements QuorumAuthServer {
     private final boolean quorumRequireSasl;
     private final String mechanism;
 
-    public SaslQuorumAuthServer(boolean quorumRequireSasl, String loginContextKey, String loginContext, Set<String> authzHosts, String saslMechanism) throws SaslException {
+    public SaslQuorumAuthServer(boolean quorumRequireSasl, String loginContext, Set<String> authzHosts, String saslMechanism) throws SaslException {
         this.quorumRequireSasl = quorumRequireSasl;
         this.mechanism = saslMechanism;
         try {
@@ -91,7 +91,7 @@ public class SaslQuorumAuthServer implements QuorumAuthServer {
                 serverLogin.getSubject(),
                 QuorumAuth.QUORUM_SERVER_PROTOCOL_NAME,
                 QuorumAuth.QUORUM_SERVER_SASL_DIGEST,
-                serverLogin.callbackHandler,
+                serverLogin.newCallbackHandler(),
                 LOG,
                 mechanism);
             while (!ss.isComplete()) {

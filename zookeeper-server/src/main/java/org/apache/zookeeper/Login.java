@@ -30,7 +30,6 @@ import org.apache.zookeeper.common.ZKConfig;
 @Deprecated
 public class Login extends org.apache.zookeeper.common.Login {
 
-    @Override
     public Login(final String loginContextName, Supplier<CallbackHandler> callbackHandlerSupplier, final ZKConfig zkConfig) throws LoginException {
         super(loginContextName, callbackHandlerSupplier, zkConfig);
     }

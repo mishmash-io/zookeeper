@@ -38,6 +38,9 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import org.apache.zookeeper.client.ZKClientConfig;
+import org.apache.zookeeper.server.ZooKeeperSaslServer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

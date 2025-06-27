@@ -71,6 +71,7 @@ import org.apache.zookeeper.client.HostProvider;
 import org.apache.zookeeper.client.ZKClientConfig;
 import org.apache.zookeeper.client.ZooKeeperSaslClient;
 import org.apache.zookeeper.common.ByteBufferInputStream;
+import org.apache.zookeeper.common.Login;
 import org.apache.zookeeper.common.Time;
 import org.apache.zookeeper.common.Trace;
 import org.apache.zookeeper.common.ZooKeeperThread;

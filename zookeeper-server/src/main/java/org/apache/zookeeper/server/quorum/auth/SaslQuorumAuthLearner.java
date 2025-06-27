@@ -55,7 +55,6 @@ public class SaslQuorumAuthLearner implements QuorumAuthLearner {
     public SaslQuorumAuthLearner(
         boolean quorumRequireSasl,
         String quorumServicePrincipal,
-        String loginContextKey,
         String loginContext,
         String saslMechanism) throws SaslException {
         this.quorumRequireSasl = quorumRequireSasl;
@@ -73,7 +72,6 @@ public class SaslQuorumAuthLearner implements QuorumAuthLearner {
                 return new SaslClientCallbackHandler(null, "QuorumLearner");
             };
             this.learnerLogin = new Login(
-                loginContextKey,
                 loginContext,
                 callbackSupplier,
                 new ZKConfig());

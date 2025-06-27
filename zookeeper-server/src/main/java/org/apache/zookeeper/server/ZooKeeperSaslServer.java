@@ -53,7 +53,7 @@ public class ZooKeeperSaslServer {
                     subject,
                     "zookeeper",
                     "zk-sasl-md5",
-                    login.callbackHandler,
+                    login.newCallbackHandler(),
                     LOG,
                     System.getProperty(SASL_MECHANISM_NAME));
         }
