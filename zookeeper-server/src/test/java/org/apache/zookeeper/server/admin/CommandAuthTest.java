@@ -51,6 +51,8 @@ import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.NettyServerCnxnFactory;
 import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ZooKeeperServer;
+import org.apache.zookeeper.server.admin.jetty.AuthRequest;
+import org.apache.zookeeper.server.admin.jetty.GetCommand;
 import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.apache.zookeeper.server.auth.X509AuthenticationProvider;

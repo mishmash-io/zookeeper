@@ -16,32 +16,22 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.admin;
+/**
+ * Command that represents HTTP POST request
+ */
+package org.apache.zookeeper.server.admin.jetty;
 
-import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import org.apache.zookeeper.server.ZooKeeperServer;
 
-/**
- * Command that represents HTTP GET request
- */
-
-public abstract class GetCommand extends CommandBase {
-
-    protected GetCommand(List<String> names) {
-        super(names);
-    }
-
-    protected GetCommand(List<String> names, boolean serverRequired) {
-        super(names, serverRequired);
-    }
-
-    protected GetCommand(List<String> names, boolean serverRequired, AuthRequest authRequest) {
+public abstract class PostCommand extends CommandBase {
+    protected PostCommand(List<String> names, boolean serverRequired, AuthRequest authRequest) {
         super(names, serverRequired, authRequest);
     }
 
     @Override
-    public CommandResponse runPost(ZooKeeperServer zkServer, InputStream inputStream) {
+    public CommandResponse runGet(ZooKeeperServer zkServer, Map<String, String> kwargs) {
         return null;
     }
 }
