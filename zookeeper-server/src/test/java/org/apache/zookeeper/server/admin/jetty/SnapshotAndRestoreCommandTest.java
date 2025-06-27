@@ -16,17 +16,17 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.admin;
+package org.apache.zookeeper.server.admin.jetty;
 
 import static org.apache.zookeeper.server.ZooKeeperServer.ZOOKEEPER_SERIALIZE_LAST_PROCESSED_ZXID_ENABLED;
-import static org.apache.zookeeper.server.admin.CommandAuthTest.addAuthInfoForDigest;
-import static org.apache.zookeeper.server.admin.CommandAuthTest.resetRootACL;
-import static org.apache.zookeeper.server.admin.CommandAuthTest.setupRootACLForDigest;
-import static org.apache.zookeeper.server.admin.Commands.ADMIN_RATE_LIMITER_INTERVAL;
-import static org.apache.zookeeper.server.admin.Commands.RestoreCommand.ADMIN_RESTORE_ENABLED;
-import static org.apache.zookeeper.server.admin.Commands.SnapshotCommand.ADMIN_SNAPSHOT_ENABLED;
-import static org.apache.zookeeper.server.admin.Commands.SnapshotCommand.REQUEST_QUERY_PARAM_STREAMING;
-import static org.apache.zookeeper.server.admin.JettyAdminServerTest.URL_FORMAT;
+import static org.apache.zookeeper.server.admin.jetty.CommandAuthTest.addAuthInfoForDigest;
+import static org.apache.zookeeper.server.admin.jetty.CommandAuthTest.resetRootACL;
+import static org.apache.zookeeper.server.admin.jetty.CommandAuthTest.setupRootACLForDigest;
+import static org.apache.zookeeper.server.admin.jetty.Commands.ADMIN_RATE_LIMITER_INTERVAL;
+import static org.apache.zookeeper.server.admin.jetty.Commands.RestoreCommand.ADMIN_RESTORE_ENABLED;
+import static org.apache.zookeeper.server.admin.jetty.Commands.SnapshotCommand.ADMIN_SNAPSHOT_ENABLED;
+import static org.apache.zookeeper.server.admin.jetty.Commands.SnapshotCommand.REQUEST_QUERY_PARAM_STREAMING;
+import static org.apache.zookeeper.server.admin.jetty.JettyAdminServerTest.URL_FORMAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;

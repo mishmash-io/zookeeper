@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.zookeeper.server.admin;
+package org.apache.zookeeper.server.admin.jetty;
 
 import static org.apache.zookeeper.server.ZooKeeperServer.ZOOKEEPER_SERIALIZE_LAST_PROCESSED_ZXID_ENABLED;
-import static org.apache.zookeeper.server.admin.Commands.ADMIN_RATE_LIMITER_INTERVAL;
-import static org.apache.zookeeper.server.admin.Commands.RestoreCommand.ADMIN_RESTORE_ENABLED;
-import static org.apache.zookeeper.server.admin.Commands.SnapshotCommand.ADMIN_SNAPSHOT_ENABLED;
-import static org.apache.zookeeper.server.admin.SnapshotAndRestoreCommandTest.performRestoreAndValidate;
-import static org.apache.zookeeper.server.admin.SnapshotAndRestoreCommandTest.takeSnapshotAndValidate;
+import static org.apache.zookeeper.server.admin.jetty.Commands.ADMIN_RATE_LIMITER_INTERVAL;
+import static org.apache.zookeeper.server.admin.jetty.Commands.RestoreCommand.ADMIN_RESTORE_ENABLED;
+import static org.apache.zookeeper.server.admin.jetty.Commands.SnapshotCommand.ADMIN_SNAPSHOT_ENABLED;
+import static org.apache.zookeeper.server.admin.jetty.SnapshotAndRestoreCommandTest.performRestoreAndValidate;
+import static org.apache.zookeeper.server.admin.jetty.SnapshotAndRestoreCommandTest.takeSnapshotAndValidate;
 import java.io.File;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.ZooDefs;

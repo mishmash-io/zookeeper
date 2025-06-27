@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server.admin;
+package org.apache.zookeeper.server.admin.jetty;
 
 import static org.apache.zookeeper.ZooDefs.Ids.OPEN_ACL_UNSAFE;
-import static org.apache.zookeeper.server.admin.Commands.AUTH_INFO_SEPARATOR;
-import static org.apache.zookeeper.server.admin.Commands.ROOT_PATH;
-import static org.apache.zookeeper.server.admin.JettyAdminServerTest.HTTPS_URL_FORMAT;
-import static org.junit.Assert.assertThrows;
+import static org.apache.zookeeper.server.admin.jetty.Commands.AUTH_INFO_SEPARATOR;
+import static org.apache.zookeeper.server.admin.jetty.Commands.ROOT_PATH;
+import static org.apache.zookeeper.server.admin.jetty.JettyAdminServerTest.HTTPS_URL_FORMAT;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;

@@ -19,25 +19,25 @@ package org.apache.zookeeper.server.auth;
 
 import static org.apache.zookeeper.server.auth.IPAuthenticationProvider.USE_X_FORWARDED_FOR_KEY;
 import static org.apache.zookeeper.server.auth.IPAuthenticationProvider.X_FORWARDED_FOR_HEADER_NAME;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class IPAuthenticationProviderTest {
 
   private HttpServletRequest request;
 
-  @Before
+  @BeforeEach
   public void setUp() throws Exception {
     System.clearProperty(USE_X_FORWARDED_FOR_KEY);
     request = mock(HttpServletRequest.class);
   }
 
-  @After
+  @AfterEach
   public void tearDown() {
     System.clearProperty(USE_X_FORWARDED_FOR_KEY);
   }
