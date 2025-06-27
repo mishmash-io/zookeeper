@@ -27,7 +27,6 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.TestableZooKeeper;
 import org.apache.zookeeper.ZooDefs.Ids;
-import org.apache.zookeeper.ZooKeeper;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.quorum.QuorumPeer.ServerState;
 import org.apache.zookeeper.test.QuorumBase;
@@ -92,18 +91,6 @@ public class EagerACLFilterTest extends QuorumBase {
         leaderWatch.waitForConnected(CONNECTION_TIMEOUT);
         clientWatch.waitForConnected(CONNECTION_TIMEOUT);
         clientWatchB.waitForConnected(CONNECTION_TIMEOUT);
-    }
-
-    void syncClient(ZooKeeper zk) {
-        CompletableFuture<Void> synced = new CompletableFuture<>();
-        zk.sync("/", (rc, path, ctx) -> {
-            if (rc == 0) {
-                synced.complete(null);
-            } else {
-                synced.completeExceptionally(KeeperException.create(KeeperException.Code.get(rc)));
-            }
-        }, null);
-        synced.join();
     }
 
     @AfterEach
