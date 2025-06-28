@@ -70,6 +70,7 @@ import org.apache.zookeeper.server.ZKDatabase;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.admin.AdminServer;
 import org.apache.zookeeper.server.admin.AdminServer.AdminServerException;
+import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.apache.zookeeper.server.admin.AdminServerFactory;
 import org.apache.zookeeper.server.persistence.FileTxnSnapLog;
 import org.apache.zookeeper.server.quorum.auth.NullQuorumAuthLearner;
@@ -1084,7 +1085,16 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
 
     // VisibleForTesting
     QuorumX509Util createX509Util() {
-        return new QuorumX509Util();
+        return new QuorumX509Util() {
+            @Override
+            protected void resetDefaultSSLContextAndOptions() throws X509Exception.SSLContextException {
+                super.resetDefaultSSLContextAndOptions();
+
+                if (Boolean.getBoolean(CLIENT_CERT_RELOAD_KEY)) {
+                    ProviderRegistry.addOrUpdateProvider(ProviderRegistry.AUTHPROVIDER_PROPERTY_PREFIX + "x509");
+                }
+            }
+        };
     }
 
     /**

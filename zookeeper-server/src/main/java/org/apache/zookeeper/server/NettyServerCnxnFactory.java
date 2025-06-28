@@ -61,7 +61,6 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.common.ClientX509Util;
 import org.apache.zookeeper.common.ConfigException;
 import org.apache.zookeeper.common.NettyUtils;
 import org.apache.zookeeper.common.X509Exception;
@@ -112,7 +111,7 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
     private InetSocketAddress localAddress;
     private int maxClientCnxns = 60;
     int listenBacklog = -1;
-    private final ClientX509Util x509Util;
+    private final ServerX509Util x509Util;
 
     public static final String NETTY_ADVANCED_FLOW_CONTROL = "zookeeper.netty.advancedFlowControl.enabled";
     private boolean advancedFlowControlEnabled = false;
@@ -509,10 +508,10 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
     }
 
     NettyServerCnxnFactory() {
-        x509Util = new ClientX509Util();
+        x509Util = new ServerX509Util();
 
-        boolean useClientReload = Boolean.getBoolean(ClientX509Util.CLIENT_CERT_RELOAD_KEY);
-        LOG.info("{}={}", ClientX509Util.CLIENT_CERT_RELOAD_KEY, useClientReload);
+        boolean useClientReload = Boolean.getBoolean(ServerX509Util.CLIENT_CERT_RELOAD_KEY);
+        LOG.info("{}={}", ServerX509Util.CLIENT_CERT_RELOAD_KEY, useClientReload);
         if (useClientReload) {
             try {
                 x509Util.enableCertFileReloading();
