@@ -30,7 +30,7 @@ import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.ZooDefs.Ids;
 import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.server.ZooKeeperSaslServer;
+import org.apache.zookeeper.common.Login;
 import org.junit.jupiter.api.Test;
 
 public class SaslAuthDesignatedServerTest extends ClientBase {
@@ -39,7 +39,7 @@ public class SaslAuthDesignatedServerTest extends ClientBase {
 
     static {
         System.setProperty("zookeeper.authProvider.1", "org.apache.zookeeper.server.auth.SASLAuthenticationProvider");
-        System.setProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY, "MyZookeeperServer");
+        System.setProperty(Login.SERVER_LOGIN_CONTEXT_NAME_KEY, "MyZookeeperServer");
 
         JaasConfiguration conf = new JaasConfiguration();
 
