@@ -121,8 +121,6 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
 
     private static final AtomicReference<ByteBufAllocator> TEST_ALLOCATOR = new AtomicReference<>(null);
 
-    public static final String CLIENT_CERT_RELOAD_KEY = "zookeeper.client.certReload";
-
     /**
      * A handler that detects whether the client would like to use
      * TLS or not and responds in kind. The first bytes are examined
@@ -513,8 +511,8 @@ public class NettyServerCnxnFactory extends ServerCnxnFactory {
     NettyServerCnxnFactory() {
         x509Util = new ClientX509Util();
 
-        boolean useClientReload = Boolean.getBoolean(CLIENT_CERT_RELOAD_KEY);
-        LOG.info("{}={}", CLIENT_CERT_RELOAD_KEY, useClientReload);
+        boolean useClientReload = Boolean.getBoolean(ClientX509Util.CLIENT_CERT_RELOAD_KEY);
+        LOG.info("{}={}", ClientX509Util.CLIENT_CERT_RELOAD_KEY, useClientReload);
         if (useClientReload) {
             try {
                 x509Util.enableCertFileReloading();

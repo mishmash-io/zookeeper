@@ -55,7 +55,6 @@ import javax.net.ssl.X509TrustManager;
 import org.apache.zookeeper.common.X509Exception.KeyManagerException;
 import org.apache.zookeeper.common.X509Exception.SSLContextException;
 import org.apache.zookeeper.common.X509Exception.TrustManagerException;
-import org.apache.zookeeper.server.NettyServerCnxnFactory;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +70,8 @@ import org.slf4j.LoggerFactory;
 public abstract class X509Util implements Closeable, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(X509Util.class);
+
+    public static final String CLIENT_CERT_RELOAD_KEY = "zookeeper.client.certReload";
 
     private static final String REJECT_CLIENT_RENEGOTIATION_PROPERTY = "jdk.tls.rejectClientInitiatedRenegotiation";
     private static final String FIPS_MODE_PROPERTY = "zookeeper.fips-mode";
@@ -332,7 +333,7 @@ public abstract class X509Util implements Closeable, AutoCloseable {
         SSLContextAndOptions newContext = createSSLContextAndOptions();
         defaultSSLContextAndOptions.set(newContext);
 
-        if (Boolean.getBoolean(NettyServerCnxnFactory.CLIENT_CERT_RELOAD_KEY)) {
+        if (Boolean.getBoolean(CLIENT_CERT_RELOAD_KEY)) {
             ProviderRegistry.addOrUpdateProvider(ProviderRegistry.AUTHPROVIDER_PROPERTY_PREFIX + "x509");
         }
     }
