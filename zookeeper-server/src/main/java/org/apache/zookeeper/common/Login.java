@@ -39,12 +39,13 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.zookeeper.client.ZKClientConfig;
-import org.apache.zookeeper.server.ZooKeeperSaslServer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Login {
+    public static final String SERVER_LOGIN_CONTEXT_NAME_KEY = "zookeeper.sasl.serverconfig";
+    public static final String DEFAULT_SERVER_LOGIN_CONTEXT_NAME = "Server";
 
     private static final String KINIT_COMMAND_DEFAULT = "/usr/bin/kinit";
     private static final Logger LOG = LoggerFactory.getLogger(Login.class);
@@ -340,9 +341,9 @@ public class Login {
                    + zkConfig.getProperty(ZKClientConfig.LOGIN_CONTEXT_NAME_KEY, ZKClientConfig.LOGIN_CONTEXT_NAME_KEY_DEFAULT)
                    + ")";
         } else {
-            return ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY
+            return SERVER_LOGIN_CONTEXT_NAME_KEY
                    + "(="
-                   + System.getProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY, ZooKeeperSaslServer.DEFAULT_LOGIN_CONTEXT_NAME)
+                   + System.getProperty(SERVER_LOGIN_CONTEXT_NAME_KEY, DEFAULT_SERVER_LOGIN_CONTEXT_NAME)
                    + ")";
         }
     }

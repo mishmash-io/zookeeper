@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
 
 public class ZooKeeperSaslServer {
 
-    public static final String LOGIN_CONTEXT_NAME_KEY = "zookeeper.sasl.serverconfig";
-    public static final String DEFAULT_LOGIN_CONTEXT_NAME = "Server";
     /**
      * Configures a SASL mechanism.
      *

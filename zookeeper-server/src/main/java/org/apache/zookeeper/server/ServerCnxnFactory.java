@@ -238,7 +238,7 @@ public abstract class ServerCnxnFactory {
      * @throws IOException if jaas.conf is missing or there's an error in it.
      */
     protected void configureSaslLogin() throws IOException {
-        String serverSection = System.getProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY, ZooKeeperSaslServer.DEFAULT_LOGIN_CONTEXT_NAME);
+        String serverSection = System.getProperty(Login.SERVER_LOGIN_CONTEXT_NAME_KEY, Login.DEFAULT_SERVER_LOGIN_CONTEXT_NAME);
 
         // Note that 'Configuration' here refers to javax.security.auth.login.Configuration.
         AppConfigurationEntry[] entries = null;
@@ -256,14 +256,14 @@ public abstract class ServerCnxnFactory {
         // we throw an exception otherwise we continue without authentication.
         if (entries == null) {
             String jaasFile = System.getProperty(Environment.JAAS_CONF_KEY);
-            String loginContextName = System.getProperty(ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY);
+            String loginContextName = System.getProperty(Login.SERVER_LOGIN_CONTEXT_NAME_KEY);
             if (securityException != null && (loginContextName != null || jaasFile != null)) {
                 String errorMessage = "No JAAS configuration section named '" + serverSection + "' was found";
                 if (jaasFile != null) {
                     errorMessage += " in '" + jaasFile + "'.";
                 }
                 if (loginContextName != null) {
-                    errorMessage += " But " + ZooKeeperSaslServer.LOGIN_CONTEXT_NAME_KEY + " was set.";
+                    errorMessage += " But " + Login.SERVER_LOGIN_CONTEXT_NAME_KEY + " was set.";
                 }
                 LOG.error(errorMessage);
                 throw new IOException(errorMessage);
