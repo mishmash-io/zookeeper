@@ -15,6 +15,73 @@ limitations under the License.
 //-->
 
 
+# Release Notes - ZooKeeper - Version 3.9.4
+
+## Breaking changes
+
+* [ZOOKEEPER-4891](https://issues.apache.org/jira/browse/ZOOKEEPER-4891) updates `logback-classic` to `1.3.15` to solve cve issues and
+`slf4j-api` to `2.0.13` to meet compatibilty requirement of logback.
+
+This could cause slf4j to complain "No SLF4J providers were found" and output no further logs in certain conditions.
+1. For library or client usage, this could happen if you specify and inherit incompatible slf4j and logback versions, say, `slf4j-api:2.0.13` from
+   `org.apache.zookeeper:zookeeper` and `logback-classic:1.2.13` from customized project dependencies.
+2. For application or deployment usage, this could happen if you custom and inherit incompatible slf4j and logback versions in classpath, say,
+   `slf4j-api:2.0.13` from zookeeper distribution and `logback-classic:1.2.13` from customization.
+
+This could be solved by specifying compatiable slf4j and logback versions in classpath, say, `slf4j-api:2.0.13` and `logback-classic:1.3.15`.
+                
+## Bug
+
+* [ZOOKEEPER-4020](https://issues.apache.org/jira/browse/ZOOKEEPER-4020) - Memory leak in  Zookeeper C Client
+* [ZOOKEEPER-4240](https://issues.apache.org/jira/browse/ZOOKEEPER-4240) - IPV6 support in ZooKeeper ACL
+* [ZOOKEEPER-4604](https://issues.apache.org/jira/browse/ZOOKEEPER-4604) - Creating a COMPLETION_STRING_STAT would set acl_result completion
+* [ZOOKEEPER-4699](https://issues.apache.org/jira/browse/ZOOKEEPER-4699) - zh-&gt;hostname heap-use-after-free in zookeeper_interest
+* [ZOOKEEPER-4725](https://issues.apache.org/jira/browse/ZOOKEEPER-4725) - TTL node creations do not appear in audit log
+* [ZOOKEEPER-4787](https://issues.apache.org/jira/browse/ZOOKEEPER-4787) - Failed to establish connection between zookeeper
+* [ZOOKEEPER-4810](https://issues.apache.org/jira/browse/ZOOKEEPER-4810) - Fix data race in format_endpoint_info()
+* [ZOOKEEPER-4819](https://issues.apache.org/jira/browse/ZOOKEEPER-4819) - Can&#39;t seek for writable tls server if connected to readonly server
+* [ZOOKEEPER-4846](https://issues.apache.org/jira/browse/ZOOKEEPER-4846) - Failure to reload database due to missing ACL
+* [ZOOKEEPER-4848](https://issues.apache.org/jira/browse/ZOOKEEPER-4848) - Possible stack overflow in setup_random
+* [ZOOKEEPER-4858](https://issues.apache.org/jira/browse/ZOOKEEPER-4858) - Remove the lock contention between snapshotting and the sync operation
+* [ZOOKEEPER-4872](https://issues.apache.org/jira/browse/ZOOKEEPER-4872) - SnapshotCommand should not perform fastForwardFromEdits 
+* [ZOOKEEPER-4886](https://issues.apache.org/jira/browse/ZOOKEEPER-4886) - observer with small myid can&#39;t join SASL quorum
+* [ZOOKEEPER-4889](https://issues.apache.org/jira/browse/ZOOKEEPER-4889) - Fallback to DIGEST-MD5 auth mech should be disabled in Fips mode
+* [ZOOKEEPER-4900](https://issues.apache.org/jira/browse/ZOOKEEPER-4900) - Bump patch release of jetty to include CVE fix for CVE-2024-6763
+* [ZOOKEEPER-4907](https://issues.apache.org/jira/browse/ZOOKEEPER-4907) - Shouldn&#39;t throw &quot;Len error&quot; when server closing cause confusion
+* [ZOOKEEPER-4909](https://issues.apache.org/jira/browse/ZOOKEEPER-4909) - When a spurious wakeup occurs, the client’s waiting time may exceed requestTimeout.
+* [ZOOKEEPER-4919](https://issues.apache.org/jira/browse/ZOOKEEPER-4919) - ResponseCache supposed to be a LRU cache
+* [ZOOKEEPER-4921](https://issues.apache.org/jira/browse/ZOOKEEPER-4921) - Zookeeper Client 3.9.3 Fails to Reconnect After Network Failures
+* [ZOOKEEPER-4925](https://issues.apache.org/jira/browse/ZOOKEEPER-4925) - Diff sync introduce hole in stale follower&#39;s committedLog which cause data loss in leading
+* [ZOOKEEPER-4928](https://issues.apache.org/jira/browse/ZOOKEEPER-4928) - Version in zookeeper_version.h is not updated
+* [ZOOKEEPER-4933](https://issues.apache.org/jira/browse/ZOOKEEPER-4933) - Connection throttle exception causing all connections to be rejected
+* [ZOOKEEPER-4940](https://issues.apache.org/jira/browse/ZOOKEEPER-4940) - Enabling zookeeper.ssl.ocsp with JRE TLS provider errors out
+* [ZOOKEEPER-4953](https://issues.apache.org/jira/browse/ZOOKEEPER-4953) - Fixing Typo In ZooKeeper Programmer&#39;s Guide
+* [ZOOKEEPER-4960](https://issues.apache.org/jira/browse/ZOOKEEPER-4960) - Upgrade OWASP plugin to 12.1.3 due to recent parsing errors
+            
+## New Feature
+
+* [ZOOKEEPER-4895](https://issues.apache.org/jira/browse/ZOOKEEPER-4895) - Introduce a helper function for C client to generate password for SASL authentication
+    
+## Improvement
+
+* [ZOOKEEPER-4790](https://issues.apache.org/jira/browse/ZOOKEEPER-4790) - TLS Quorum hostname verification breaks in some scenarios
+* [ZOOKEEPER-4852](https://issues.apache.org/jira/browse/ZOOKEEPER-4852) - Fix the bad "*uuuuu" mark in the ASF license
+* [ZOOKEEPER-4891](https://issues.apache.org/jira/browse/ZOOKEEPER-4891) - Update logback to 1.3.15 to fix CVE-2024-12798.
+* [ZOOKEEPER-4902](https://issues.apache.org/jira/browse/ZOOKEEPER-4902) - Document that read-only mode also enables isro 4lw
+* [ZOOKEEPER-4906](https://issues.apache.org/jira/browse/ZOOKEEPER-4906) - Log full exception details for server JAAS config failure
+* [ZOOKEEPER-4944](https://issues.apache.org/jira/browse/ZOOKEEPER-4944) - Cache zookeeper dists for end to end compatibility tests
+* [ZOOKEEPER-4954](https://issues.apache.org/jira/browse/ZOOKEEPER-4954) - Use FIPS style hostname verification when no custom truststore is specified
+* [ZOOKEEPER-4964](https://issues.apache.org/jira/browse/ZOOKEEPER-4964) - Check permissions individually during admin server auth
+            
+## Task
+
+* [ZOOKEEPER-4897](https://issues.apache.org/jira/browse/ZOOKEEPER-4897) - Upgrade Netty to fix CVE-2025-24970 in ZooKeeper 3.9.3
+* [ZOOKEEPER-4959](https://issues.apache.org/jira/browse/ZOOKEEPER-4959) - Fix license files after logback/slf4j upgrade
+                                                                                                                                                        
+
+&nbsp;
+
+
 # Release Notes - ZooKeeper - Version 3.9.3
                 
 ## Bug

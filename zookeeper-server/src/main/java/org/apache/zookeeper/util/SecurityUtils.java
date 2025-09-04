@@ -27,7 +27,10 @@ import javax.security.sasl.Sasl;
 import javax.security.sasl.SaslClient;
 import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
-
+import org.apache.zookeeper.util.SaslClientCallbackHandler;
+import org.apache.zookeeper.common.X509Util;
+import org.apache.zookeeper.common.ZKConfig;
+import org.apache.zookeeper.util.KerberosName;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -59,6 +62,7 @@ public final class SecurityUtils {
      * @throws SaslException
      */
     public static SaslClient createSaslClient(
+        ZKConfig config,
         final Subject subject,
         final String servicePrincipal,
         final String protocol,
@@ -73,6 +77,11 @@ public final class SecurityUtils {
             // no principals: must not be GSSAPI: use the first public credential
             // as username and the first private credential as password.
             String[] mechs = {saslMech == null ? "DIGEST-MD5" : saslMech};
+            // FIPS-mode: don't try DIGEST-MD5, just return error
+            if (saslMech == null && X509Util.getFipsMode(config)) {
+                LOG.warn("{} will not use DIGEST-MD5 as SASL mechanism, because FIPS mode is enabled.", entity);
+                return null;
+            }
             LOG.info("{} will use {} as SASL mechanism.", entity, mechs[0]);
             // TODO: when using a custom sasl mechanism - allow a custom SaslClientCallbackHandler to be provided too
             // TODO: client and server must be configured with the same mechanism!

@@ -730,7 +730,7 @@ static void setup_random()
             /* Assert we either read something or we were interrupted due to a
              * signal (errno == EINTR) in which case we need to retry.
              */
-            int rc = read(fd, &seed + seed_len, sizeof(seed) - seed_len);
+            int rc = read(fd, (char *)&seed + seed_len, sizeof(seed) - seed_len);
             assert(rc > 0 || errno == EINTR);
             if (rc > 0) {
                 seed_len += rc;
@@ -1454,7 +1454,7 @@ zhandle_t *zookeeper_init_ssl(const char *host, const char *cert, watcher_fn wat
 {
     zcert_t zcert;
     zcert.certstr = strdup(cert);
-    zcert.ca = strtok(strdup(cert), ",");
+    zcert.ca = strtok(zcert.certstr, ",");
     zcert.cert = strtok(NULL, ",");
     zcert.key = strtok(NULL, ",");
     zcert.passwd = strtok(NULL, ",");       
@@ -2558,8 +2558,9 @@ int zookeeper_interest(zhandle_t *zh, socket_t *fd, int *interest,
             *tv = get_timeval(zh->recv_timeout/60);
             zh->delay = 0;
 
-            LOG_WARN(LOGCALLBACK(zh), "Delaying connection after exhaustively trying all servers [%s]",
-                     zh->hostname);
+            lock_reconfig(zh);
+            LOG_WARN(LOGCALLBACK(zh), "Delaying connection after exhaustively trying all servers [%s]", zh->hostname);
+            unlock_reconfig(zh);
         } else {
             if (addr_rw_server) {
                 zh->addr_cur = *addr_rw_server;
@@ -3623,6 +3624,7 @@ static completion_list_t* do_create_completion_entry(zhandle_t *zh, int xid,
         break;
     case COMPLETION_STRING_STAT:
         c->c.string_stat_result = (string_stat_completion_t)dc;
+        break;
     case COMPLETION_ACLLIST:
         c->c.acl_result = (acl_completion_t)dc;
         break;
@@ -5111,11 +5113,11 @@ int zoo_add_auth(zhandle_t *zh,const char* scheme,const char* cert,
 
 static const char* format_endpoint_info(const struct sockaddr_storage* ep)
 {
-    static char buf[134] = { 0 };
+    static __thread char buf[134] = { 0 };
     char addrstr[INET6_ADDRSTRLEN] = { 0 };
     const char *fmtstring;
     void *inaddr;
-    char is_inet6 = 0;  // poor man's boolean
+    char is_inet6 = 0; // poor man's boolean
 #ifdef _WIN32
     char * addrstring;
 #endif

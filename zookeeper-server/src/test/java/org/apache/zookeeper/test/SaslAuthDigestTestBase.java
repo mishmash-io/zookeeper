@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -16,39 +16,29 @@
  * limitations under the License.
  */
 
-package org.apache.zookeeper.server;
+package org.apache.zookeeper.test;
 
-import org.apache.jute.Record;
-import org.apache.zookeeper.txn.TxnDigest;
-import org.apache.zookeeper.txn.TxnHeader;
+import org.apache.zookeeper.common.X509Util;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 
 /**
- * A helper class to represent the txn entry.
+ * Created as a base class for Digest Auth based SASL authentication tests.
+ * We need to disable Fips mode, otherwise DIGEST-MD5 cannot be used.
+ *
+ * @see org.apache.zookeeper.server.quorum.auth.DigestSecurityTestcase
  */
-public final class TxnLogEntry {
-    private final Record txn;
-    private final TxnHeader header;
-    private final TxnDigest digest;
+public class SaslAuthDigestTestBase extends ClientBase {
 
-    public TxnLogEntry(Record txn, TxnHeader header, TxnDigest digest) {
-        this.txn = txn;
-        this.header = header;
-        this.digest = digest;
-    }
+  @BeforeAll
+  public static void beforeClass() throws Exception {
+    // Need to disable Fips-mode, because we use DIGEST-MD5 mech for Sasl
+    System.setProperty(X509Util.FIPS_MODE_PROPERTY, "false");
+  }
 
-    public Record getTxn() {
-        return txn;
-    }
+  @AfterAll
+  public static void afterClass() throws Exception {
+    System.clearProperty(X509Util.FIPS_MODE_PROPERTY);
+  }
 
-    public TxnHeader getHeader() {
-        return header;
-    }
-
-    public TxnDigest getDigest() {
-        return digest;
-    }
-
-    public Request toRequest() {
-        return new Request(header, txn, digest);
-    }
 }

@@ -8,9 +8,9 @@
  * with the License.  You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
- *uuuuu
+ *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "/RequuuAS IS" BASIS,
+ * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -76,6 +76,19 @@ public class Request {
         this.request = null;
         this.cnxn = null;
         this.authInfo = null;
+    }
+
+    public Request(TxnHeader hdr, Record txn, TxnDigest digest) {
+        this.sessionId = hdr.getClientId();
+        this.cxid = hdr.getCxid();
+        this.type = hdr.getType();
+        this.hdr = hdr;
+        this.txn = txn;
+        this.zxid = hdr.getZxid();
+        this.request = null;
+        this.cnxn = null;
+        this.authInfo = null;
+        this.txnDigest = digest;
     }
 
     public final long sessionId;

@@ -20,8 +20,8 @@ package org.apache.zookeeper.server.admin.jetty;
 
 import static org.apache.zookeeper.server.ZooKeeperServer.ZOOKEEPER_SERIALIZE_LAST_PROCESSED_ZXID_ENABLED;
 import static org.apache.zookeeper.server.admin.jetty.CommandAuthTest.addAuthInfoForDigest;
+import static org.apache.zookeeper.server.admin.jetty.CommandAuthTest.genACLForDigest;
 import static org.apache.zookeeper.server.admin.jetty.CommandAuthTest.resetRootACL;
-import static org.apache.zookeeper.server.admin.jetty.CommandAuthTest.setupRootACLForDigest;
 import static org.apache.zookeeper.server.admin.jetty.Commands.ADMIN_RATE_LIMITER_INTERVAL;
 import static org.apache.zookeeper.server.admin.jetty.Commands.RestoreCommand.ADMIN_RESTORE_ENABLED;
 import static org.apache.zookeeper.server.admin.jetty.Commands.SnapshotCommand.ADMIN_SNAPSHOT_ENABLED;
@@ -119,7 +119,7 @@ public class SnapshotAndRestoreCommandTest extends ZKTestCase {
         zk = ClientBase.createZKClient(hostPort);
 
         // setup root ACL
-        setupRootACLForDigest(zk);
+        zk.setACL(Commands.ROOT_PATH, genACLForDigest(), -1);
 
         // add auth
         addAuthInfoForDigest(zk);

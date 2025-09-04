@@ -265,7 +265,7 @@ public abstract class ServerCnxnFactory {
                 if (loginContextName != null) {
                     errorMessage += " But " + Login.SERVER_LOGIN_CONTEXT_NAME_KEY + " was set.";
                 }
-                LOG.error(errorMessage);
+                LOG.error(errorMessage, securityException);
                 throw new IOException(errorMessage);
             }
             return;

@@ -252,6 +252,7 @@ public class ZooKeeperSaslClient {
                 }
             }
             return SecurityUtils.createSaslClient(
+                    clientConfig,
                     loginRef.get().getSubject(), 
                     servicePrincipal,
                     "zookeeper",
