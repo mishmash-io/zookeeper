@@ -18,6 +18,7 @@
 
 package org.apache.zookeeper.common;
 
+import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.DelegatingSslContext;
 import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslContext;
@@ -25,6 +26,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
 
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLEngine;
@@ -102,7 +104,7 @@ public class NettyClientX509Util extends ClientX509Util {
 
         handleTcnativeOcspStapling(sslContextBuilder, config);
         sslContextBuilder.protocols(getEnabledProtocols(config));
-        sslContextBuilder.clientAuth(getClientAuth(config).toNettyClientAuth());
+        sslContextBuilder.clientAuth(getClientAuth(config));
         Iterable<String> enabledCiphers = getCipherSuites(config);
         if (enabledCiphers != null) {
             sslContextBuilder.ciphers(enabledCiphers);
@@ -188,7 +190,17 @@ public class NettyClientX509Util extends ClientX509Util {
         return enabledProtocolsInput.split(",");
     }
 
-    private X509Util.ClientAuth getClientAuth(final ZKConfig config) {
-        return X509Util.ClientAuth.fromPropertyValue(config.getProperty(getSslClientAuthProperty()));
+    private io.netty.handler.ssl.ClientAuth getClientAuth(final ZKConfig config) {
+        X509Util.ClientAuth ca = X509Util.ClientAuth.fromPropertyValue(config.getProperty(getSslClientAuthProperty()));
+        switch(ca) {
+        case NEED:
+            return io.netty.handler.ssl.ClientAuth.REQUIRE;
+        case NONE:
+            return io.netty.handler.ssl.ClientAuth.NONE;
+        case WANT:
+            return io.netty.handler.ssl.ClientAuth.OPTIONAL;
+        default:
+            throw new NoSuchElementException("Unknown client auth: " + ca);
+        }
     }
 }
