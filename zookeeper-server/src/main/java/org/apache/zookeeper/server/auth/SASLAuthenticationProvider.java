@@ -18,8 +18,10 @@
 
 package org.apache.zookeeper.server.auth;
 
+import java.util.List;
+
 import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.server.ServerCnxn;
+import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.util.KerberosName;
 
 public class SASLAuthenticationProvider implements AuthenticationProvider {
@@ -28,11 +30,12 @@ public class SASLAuthenticationProvider implements AuthenticationProvider {
         return "sasl";
     }
 
-    public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
+    @Override
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException {
         // Should never call this: SASL authentication is negotiated at session initiation.
         // TODO: consider substituting current implementation of direct ClientCnxn manipulation with
         // a call to this method (SASLAuthenticationProvider:handleAuthentication()) at session initiation.
-        return KeeperException.Code.AUTHFAILED;
+        throw KeeperException.create(KeeperException.Code.AUTHFAILED);
 
     }
 

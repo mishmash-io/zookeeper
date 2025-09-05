@@ -20,8 +20,10 @@ package org.apache.zookeeper.server.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
 import org.apache.zookeeper.server.ServerMetrics;
 import org.slf4j.Logger;
@@ -71,22 +73,30 @@ public class EnsembleAuthenticationProvider implements AuthenticationProvider {
     private long lastFailureLogged;
 
     @Override
-    public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException {
+        if (ServerCnxn.class.equals(klass)) {
+            return authenticateServerCnxn((ServerCnxn) conn, authData);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    protected List<Id> authenticateServerCnxn(ServerCnxn cnxn, byte[] authData) throws KeeperException {
         if (authData == null || authData.length == 0) {
             ServerMetrics.getMetrics().ENSEMBLE_AUTH_SKIP.add(1);
-            return KeeperException.Code.OK;
+            return List.of();
         }
 
         String receivedEnsembleName = new String(authData, StandardCharsets.UTF_8);
 
         if (ensembleNames == null) {
             ServerMetrics.getMetrics().ENSEMBLE_AUTH_SKIP.add(1);
-            return KeeperException.Code.OK;
+            return List.of();
         }
 
         if (ensembleNames.contains(receivedEnsembleName)) {
             ServerMetrics.getMetrics().ENSEMBLE_AUTH_SUCCESS.add(1);
-            return KeeperException.Code.OK;
+            return List.of();
         }
 
         long currentTime = System.currentTimeMillis();
@@ -103,7 +113,7 @@ public class EnsembleAuthenticationProvider implements AuthenticationProvider {
          */
         ServerMetrics.getMetrics().ENSEMBLE_AUTH_FAIL.add(1);
         cnxn.close(ServerCnxn.DisconnectReason.FAILED_HANDSHAKE);
-        return KeeperException.Code.BADARGUMENTS;
+        throw KeeperException.create(KeeperException.Code.BADARGUMENTS);
     }
 
     /*

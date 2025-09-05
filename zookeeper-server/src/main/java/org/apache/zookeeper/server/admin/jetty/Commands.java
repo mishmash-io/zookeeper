@@ -198,7 +198,7 @@ public class Commands {
         return isGet ? command.runGet(zkServer, kwargs) : command.runPost(zkServer, inputStream);
     }
 
-    private static List<Id> handleAuthentication(final HttpServletRequest request, final String authInfo) throws KeeperException.AuthFailedException {
+    private static List<Id> handleAuthentication(final HttpServletRequest request, final String authInfo) throws KeeperException {
         final String[] authData = authInfo.split(AUTH_INFO_SEPARATOR);
         // for IP and x509, auth info only contains the schema and Auth Id will be extracted from HTTP request
         if (authData.length != 1 && authData.length != 2) {
@@ -211,7 +211,7 @@ public class Commands {
         if (authProvider != null) {
             try {
                 final byte[] auth = authData.length == 2 ? authData[1].getBytes(StandardCharsets.UTF_8) : null;
-                final List<Id> ids = authProvider.handleAuthentication(request, auth);
+                final List<Id> ids = authProvider.authenticate(HttpServletRequest.class, request, auth);
                 if (ids.isEmpty()) {
                     LOG.warn("Auth Id list is empty");
                     throw new KeeperException.AuthFailedException();

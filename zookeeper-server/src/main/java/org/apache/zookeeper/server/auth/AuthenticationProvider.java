@@ -18,9 +18,7 @@
 
 package org.apache.zookeeper.server.auth;
 
-import java.util.ArrayList;
 import java.util.List;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
@@ -40,6 +38,28 @@ public interface AuthenticationProvider {
     String getScheme();
 
     /**
+     * Authenticate a given object and optional authentication data.
+     *
+     * This method attempts to authenticate (typically) a connection object
+     * (such as a server connection object or a HTTP request) and returns
+     * the associated Id's that were extracted.
+     *
+     * All the specifics required by a particular access implementation
+     * (a server connection object or a HTTP request) are also done by this
+     * method.
+     *
+     * @param <T> the type of access method
+     * @param klass the class of the access method
+     * @param conn an instance of the access method
+     * @param authData some additional data, if it was available
+     * @return a list of extracted identities, may be empty
+     * @throws KeeperException if authentication fails
+     * @throws UnsupportedOperationException if the requested access method is not
+     * supported
+     */
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException;
+
+    /**
      * This method is called when a client passes authentication data for this
      * scheme. The authData is directly from the authentication packet. The
      * implementor may attach new ids to the authInfo field of cnxn or may use
@@ -51,21 +71,13 @@ public interface AuthenticationProvider {
      *                the authentication data received.
      * @return TODO
      */
-    KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData);
-
-    /**
-     * This method is called when admin server command passes authentication data for this
-     * scheme.
-     *
-     * @param request
-     *                the request that contains the authentication information.
-     * @param authData
-     *                the authentication data received.
-     * @return Ids
-     *                the list of Id. Empty list means not authenticated
-     */
-    default List<Id> handleAuthentication(HttpServletRequest request, byte[] authData) {
-        return new ArrayList<>();
+    default KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
+        try {
+            authenticate(ServerCnxn.class, cnxn, authData);
+            return KeeperException.Code.OK;
+        } catch (KeeperException e) {
+            return e.code();
+        }
     }
 
     /**

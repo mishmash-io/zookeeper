@@ -18,12 +18,8 @@
 
 package org.apache.zookeeper.server.auth;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.regex.Pattern;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
@@ -32,9 +28,7 @@ import org.slf4j.LoggerFactory;
 
 public class IPAuthenticationProvider implements AuthenticationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(IPAuthenticationProvider.class);
-    public static final String X_FORWARDED_FOR_HEADER_NAME = "X-Forwarded-For";
 
-    public static final String USE_X_FORWARDED_FOR_KEY = "zookeeper.IPAuthenticationProvider.usexforwardedfor";
     private static final int IPV6_BYTE_LENGTH = 16; // IPv6 address is 128 bits = 16 bytes
     private static final int IPV6_SEGMENT_COUNT = 8; // IPv6 address has 8 segments
     private static final int IPV6_SEGMENT_BYTE_LENGTH = 2; // Each segment has up to two bytes
@@ -47,20 +41,20 @@ public class IPAuthenticationProvider implements AuthenticationProvider {
         return "ip";
     }
 
-    public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
-        String id = cnxn.getRemoteSocketAddress().getAddress().getHostAddress();
-        cnxn.addAuthInfo(new Id(getScheme(), id));
-        return KeeperException.Code.OK;
+    @Override
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException {
+        if (ServerCnxn.class.equals(klass)) {
+            return authenticateServerCnxn((ServerCnxn) conn);
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
-    @Override
-    public List<Id> handleAuthentication(HttpServletRequest request, byte[] authData) {
-        final List<Id> ids = new ArrayList<>();
-
-        final String ip = getClientIPAddress(request);
-        ids.add(new Id(getScheme(), ip));
-
-        return Collections.unmodifiableList(ids);
+    protected List<Id> authenticateServerCnxn(ServerCnxn cnxn) {
+        String idStr = cnxn.getRemoteSocketAddress().getAddress().getHostAddress();
+        Id id = (new Id(getScheme(), idStr));
+        cnxn.addAuthInfo(id);
+        return List.of(id);
     }
 
     // This is a bit weird but we need to return the address and the number of
@@ -242,24 +236,5 @@ public class IPAuthenticationProvider implements AuthenticationProvider {
             }
         }
         return true;
-    }
-
-    /**
-     * Returns the HTTP(s) client IP address
-     * @param request HttpServletRequest
-     * @return IP address
-     */
-    public static String getClientIPAddress(final HttpServletRequest request) {
-        if (!Boolean.getBoolean(USE_X_FORWARDED_FOR_KEY)) {
-            return request.getRemoteAddr();
-        }
-
-        // to handle the case that a HTTP(s) client connects via a proxy or load balancer
-        final String xForwardedForHeader = request.getHeader(X_FORWARDED_FOR_HEADER_NAME);
-        if (xForwardedForHeader == null) {
-            return request.getRemoteAddr();
-        }
-        // the format of the field is: X-Forwarded-For: client, proxy1, proxy2 ...
-        return new StringTokenizer(xForwardedForHeader, ",").nextToken().trim();
     }
 }

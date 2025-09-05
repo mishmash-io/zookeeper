@@ -19,6 +19,9 @@
 package org.apache.zookeeper.server.auth;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.util.List;
+
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.apache.zookeeper.data.Id;
@@ -90,7 +93,7 @@ public class KeyAuthenticationProvider extends ServerAuthenticationProvider {
     }
 
     @Override
-    public KeeperException.Code handleAuthentication(ServerObjs serverObjs, byte[] authData) {
+    public List<Id> authenticateServerObjs(ServerObjs serverObjs, byte[] authData) throws KeeperException {
         byte[] key = getKey(serverObjs.getZks());
         String authStr = new String(authData, UTF_8);
         String keyStr = "";
@@ -98,7 +101,7 @@ public class KeyAuthenticationProvider extends ServerAuthenticationProvider {
             if (!validate(key, authData)) {
                 keyStr = new String(key, UTF_8);
                 LOG.debug("KeyAuthenticationProvider handleAuthentication ({}, {}) -> FAIL.\n", keyStr, authStr);
-                return KeeperException.Code.AUTHFAILED;
+                throw KeeperException.create(KeeperException.Code.AUTHFAILED);
             }
         }
         // default to allow, so the key can be initially written
@@ -108,8 +111,9 @@ public class KeyAuthenticationProvider extends ServerAuthenticationProvider {
         //   In that case, replace it with something non-ephemeral (or punt with null).
         //
         // BOTH addAuthInfo and an OK return-code are needed for authentication.
-        serverObjs.getCnxn().addAuthInfo(new Id(getScheme(), keyStr));
-        return KeeperException.Code.OK;
+        Id id = new Id(getScheme(), keyStr);
+        serverObjs.getCnxn().addAuthInfo(id);
+        return List.of(id);
     }
 
     @Override

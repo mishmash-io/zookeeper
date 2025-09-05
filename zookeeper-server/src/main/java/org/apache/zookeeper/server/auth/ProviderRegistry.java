@@ -76,6 +76,12 @@ public class ProviderRegistry {
         }
     }
 
+    public static void addOrUpdateProvider(final AuthenticationProvider provider) {
+        synchronized (ProviderRegistry.class) {
+            authenticationProviders.put(provider.getScheme(), provider);
+        }
+    }
+
     public static ServerAuthenticationProvider getServerProvider(String scheme) {
         return WrappedAuthenticationProvider.wrap(getProvider(scheme));
     }

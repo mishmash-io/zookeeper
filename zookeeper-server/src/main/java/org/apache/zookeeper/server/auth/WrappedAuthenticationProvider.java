@@ -19,7 +19,6 @@
 package org.apache.zookeeper.server.auth;
 
 import java.util.List;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
@@ -58,12 +57,12 @@ class WrappedAuthenticationProvider extends ServerAuthenticationProvider {
     /**
      * {@inheritDoc}
      *
-     * forwards to older method {@link #handleAuthentication(HttpServletRequest, byte[])}
-     * @return
+     * forwards to older method {@link #authenticate(Class, Object, byte[])}
+     * for the ServerCnxn
      */
     @Override
-    public List<Id> handleAuthentication(HttpServletRequest request, byte[] authData) {
-        return implementation.handleAuthentication(request, authData);
+    public List<Id> authenticateServerObjs(ServerObjs objs, byte[] authData) throws KeeperException {
+        return implementation.authenticate(ServerCnxn.class, objs.getCnxn(), authData);
     }
 
     /**
