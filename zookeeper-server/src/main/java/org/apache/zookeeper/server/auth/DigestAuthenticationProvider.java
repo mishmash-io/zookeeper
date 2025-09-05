@@ -24,7 +24,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
@@ -126,20 +125,24 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
         return MessageDigest.getInstance(DIGEST_ALGORITHM).digest(idPassword.getBytes(UTF_8));
     }
 
-    public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
+    @Override
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException {
+        if (ServerCnxn.class.equals(klass)) {
+            return authenticateServerCnxn((ServerCnxn) conn, authData);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    protected List<Id> authenticateServerCnxn(ServerCnxn cnxn, byte[] authData) throws KeeperException {
         final List<Id> ids = handleAuthentication(authData);
         if (ids.isEmpty()) {
-            return KeeperException.Code.AUTHFAILED;
+            throw KeeperException.create(KeeperException.Code.AUTHFAILED);
         }
         for (Id id : ids) {
             cnxn.addAuthInfo(id);
         }
-        return KeeperException.Code.OK;
-    }
-
-    @Override
-    public List<Id> handleAuthentication(HttpServletRequest request, byte[] authData) {
-        return handleAuthentication(authData);
+        return ids;
     }
 
     public boolean isAuthenticated() {
@@ -175,7 +178,7 @@ public class DigestAuthenticationProvider implements AuthenticationProvider {
         }
     }
 
-    private List<Id> handleAuthentication(final byte[] authData) {
+    protected List<Id> handleAuthentication(final byte[] authData) {
         final List<Id> ids = new ArrayList<>();
         final String id = new String(authData);
         try {

@@ -29,7 +29,6 @@ import java.util.List;
 import javax.net.ssl.X509KeyManager;
 import javax.net.ssl.X509TrustManager;
 import javax.security.auth.x500.X500Principal;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.common.ClientX509Util;
 import org.apache.zookeeper.common.X509Exception;
@@ -60,7 +59,6 @@ import org.slf4j.LoggerFactory;
  */
 public class X509AuthenticationProvider implements AuthenticationProvider {
 
-    public static final String X509_CERTIFICATE_ATTRIBUTE_NAME = "jakarta.servlet.request.X509Certificate";
     static final String ZOOKEEPER_X509AUTHENTICATIONPROVIDER_SUPERUSER = "zookeeper.X509AuthenticationProvider.superUser";
     private static final Logger LOG = LoggerFactory.getLogger(X509AuthenticationProvider.class);
     private final X509TrustManager trustManager;
@@ -150,27 +148,28 @@ public class X509AuthenticationProvider implements AuthenticationProvider {
     }
 
     @Override
-    public KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException {
+        if (ServerCnxn.class.equals(klass)) {
+            return authenticateServerCnxn((ServerCnxn) conn, authData);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    protected List<Id> authenticateServerCnxn(ServerCnxn cnxn, byte[] authData) throws KeeperException {
         List<Certificate> certs = Arrays.asList(cnxn.getClientCertificateChain());
         X509Certificate[] certChain = certs.toArray(new X509Certificate[certs.size()]);
 
         final Collection<Id> ids = handleAuthentication(certChain);
         if (ids.isEmpty()) {
             LOG.error("Failed to authenticate session 0x{}", Long.toHexString(cnxn.getSessionId()));
-            return KeeperException.Code.AUTHFAILED;
+            throw KeeperException.create(KeeperException.Code.AUTHFAILED);
         }
 
         for (Id id : ids) {
             cnxn.addAuthInfo(id);
         }
-        return KeeperException.Code.OK;
-    }
-
-    @Override
-    public List<Id> handleAuthentication(HttpServletRequest request, byte[] authData) {
-        final X509Certificate[] certChain =
-                (X509Certificate[]) request.getAttribute(X509_CERTIFICATE_ATTRIBUTE_NAME);
-        return handleAuthentication(certChain);
+        return ids.stream().toList();
     }
 
     /**
@@ -239,7 +238,7 @@ public class X509AuthenticationProvider implements AuthenticationProvider {
         return keyManager;
     }
 
-    private List<Id> handleAuthentication(final X509Certificate[] certChain) {
+    protected List<Id> handleAuthentication(final X509Certificate[] certChain) {
         final List<Id> ids = new ArrayList<>();
         if (certChain == null || certChain.length == 0) {
             LOG.warn("No certificate chain available to authenticate");

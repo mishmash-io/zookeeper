@@ -17,8 +17,8 @@
  */
 package org.apache.zookeeper.server.auth;
 
-import static org.apache.zookeeper.server.auth.IPAuthenticationProvider.USE_X_FORWARDED_FOR_KEY;
-import static org.apache.zookeeper.server.auth.IPAuthenticationProvider.X_FORWARDED_FOR_HEADER_NAME;
+import static org.apache.zookeeper.server.auth.admin.HttpIPAuthenticationProvider.USE_X_FORWARDED_FOR_KEY;
+import static org.apache.zookeeper.server.auth.admin.HttpIPAuthenticationProvider.X_FORWARDED_FOR_HEADER_NAME;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -30,6 +30,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import java.util.stream.Stream;
 import jakarta.servlet.http.HttpServletRequest;
+
+import org.apache.zookeeper.server.auth.admin.HttpIPAuthenticationProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,7 +62,7 @@ public class IPAuthenticationProviderTest {
     doReturn("192.168.1.2,192.168.1.3,192.168.1.4").when(request).getHeader(X_FORWARDED_FOR_HEADER_NAME);
 
     // Act
-    String clientIp = IPAuthenticationProvider.getClientIPAddress(request);
+    String clientIp = HttpIPAuthenticationProvider.getClientIPAddress(request);
 
     // Assert
     assertEquals("192.168.1.1", clientIp);
@@ -74,7 +76,7 @@ public class IPAuthenticationProviderTest {
     doReturn("192.168.1.2,192.168.1.3,192.168.1.4").when(request).getHeader(X_FORWARDED_FOR_HEADER_NAME);
 
     // Act
-    String clientIp = IPAuthenticationProvider.getClientIPAddress(request);
+    String clientIp = HttpIPAuthenticationProvider.getClientIPAddress(request);
 
     // Assert
     assertEquals("192.168.1.1", clientIp);
@@ -88,7 +90,7 @@ public class IPAuthenticationProviderTest {
     doReturn("192.168.1.2,192.168.1.3,192.168.1.4").when(request).getHeader(X_FORWARDED_FOR_HEADER_NAME);
 
     // Act
-    String clientIp = IPAuthenticationProvider.getClientIPAddress(request);
+    String clientIp = HttpIPAuthenticationProvider.getClientIPAddress(request);
 
     // Assert
     assertEquals("192.168.1.2", clientIp);
@@ -101,7 +103,7 @@ public class IPAuthenticationProviderTest {
     doReturn("192.168.1.1").when(request).getRemoteAddr();
 
     // Act
-    String clientIp = IPAuthenticationProvider.getClientIPAddress(request);
+    String clientIp = HttpIPAuthenticationProvider.getClientIPAddress(request);
 
     // Assert
     assertEquals("192.168.1.1", clientIp);

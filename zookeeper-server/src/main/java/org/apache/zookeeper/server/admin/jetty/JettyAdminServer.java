@@ -34,7 +34,10 @@ import org.apache.zookeeper.common.SecretUtils;
 import org.apache.zookeeper.common.X509Util;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.admin.AdminServer;
-import org.apache.zookeeper.server.auth.IPAuthenticationProvider;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
+import org.apache.zookeeper.server.auth.ProviderRegistry;
+import org.apache.zookeeper.server.auth.admin.HttpDigestAuthenticationProvider;
+import org.apache.zookeeper.server.auth.admin.HttpIPAuthenticationProvider;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.ee10.servlet.security.ConstraintMapping;
@@ -83,6 +86,13 @@ public class JettyAdminServer implements AdminServer {
     private final int idleTimeout;
     private final String commandUrl;
     private ZooKeeperServer zkServer;
+
+    static {
+        ProviderRegistry.addOrUpdateProvider(new HttpIPAuthenticationProvider());
+        if (DigestAuthenticationProvider.isEnabled()) {
+            ProviderRegistry.addOrUpdateProvider(new HttpDigestAuthenticationProvider());
+        }
+    }
 
     public JettyAdminServer() throws AdminServerException, IOException, GeneralSecurityException {
         this(
@@ -276,7 +286,7 @@ public class JettyAdminServer implements AdminServer {
             for (final Map.Entry<String, String> header : headers.entrySet()) {
                 response.addHeader(header.getKey(), header.getValue());
             }
-            final String clientIP = IPAuthenticationProvider.getClientIPAddress(request);
+            final String clientIP = HttpIPAuthenticationProvider.getClientIPAddress(request);
             if (cmdResponse.getInputStream() == null) {
                 // Format and print the output of the command
                 CommandOutputter outputter = new JsonOutputter(clientIP);
@@ -303,7 +313,7 @@ public class JettyAdminServer implements AdminServer {
             if (cmdName != null) {
                 final String authInfo = request.getHeader(HttpHeader.AUTHORIZATION.asString());
                 final CommandResponse cmdResponse = Commands.runPostCommand(cmdName, zkServer, request.getInputStream(), authInfo, request);
-                final String clientIP = IPAuthenticationProvider.getClientIPAddress(request);
+                final String clientIP = HttpIPAuthenticationProvider.getClientIPAddress(request);
                 sendJSONResponse(response, cmdResponse, clientIP);
             }
         }

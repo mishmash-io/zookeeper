@@ -21,6 +21,7 @@ package org.apache.zookeeper.server.auth;
 import java.util.List;
 import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.ACL;
+import org.apache.zookeeper.data.Id;
 import org.apache.zookeeper.server.ServerCnxn;
 import org.apache.zookeeper.server.ZooKeeperServer;
 
@@ -106,6 +107,26 @@ public abstract class ServerAuthenticationProvider implements AuthenticationProv
 
     }
 
+    @Override
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException {
+        if (ServerObjs.class.equals(klass)) {
+            return authenticateServerObjs((ServerObjs) conn, authData);
+        } else if (ServerCnxn.class.equals(klass)) {
+            throw new UnsupportedOperationException();
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public KeeperException.Code handleAuthentication(ServerObjs objs, byte[] authData) {
+        try {
+            authenticateServerObjs(objs, authData);
+            return KeeperException.Code.OK;
+        } catch (KeeperException e) {
+            return e.code();
+        }
+    }
+
     /**
      * This method is called when a client passes authentication data for this
      * scheme. The authData is directly from the authentication packet. The
@@ -116,9 +137,10 @@ public abstract class ServerAuthenticationProvider implements AuthenticationProv
      *                cnxn/server/etc that received the authentication information.
      * @param authData
      *                the authentication data received.
-     * @return indication of success or failure
+     * @return List of authenticated Ids
+     * @throws KeeperException if authentication fails
      */
-    public abstract KeeperException.Code handleAuthentication(ServerObjs serverObjs, byte[] authData);
+    public abstract List<Id> authenticateServerObjs(ServerObjs objs, byte[] authData) throws KeeperException;
 
     /**
      * This method is called to see if the given id matches the given id
@@ -131,11 +153,6 @@ public abstract class ServerAuthenticationProvider implements AuthenticationProv
      *                values to be matched
      */
     public abstract boolean matches(ServerObjs serverObjs, MatchValues matchValues);
-
-    @Override
-    public final KeeperException.Code handleAuthentication(ServerCnxn cnxn, byte[] authData) {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public final boolean matches(String id, String aclExpr) {
