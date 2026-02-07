@@ -258,7 +258,7 @@ public class CommandAuthTest extends ZKTestCase {
     }
 
     private void setupTLS() throws Exception {
-        System.setProperty("zookeeper.authProvider.x509", "org.apache.zookeeper.server.auth.X509AuthenticationProvider");
+        System.setProperty("zookeeper.authProvider.x509", "org.apache.zookeeper.server.auth.admin.HttpX509AuthenticationProvider");
         String testDataPath = System.getProperty("test.data.dir", "src/test/resources/data");
 
         System.setProperty(clientX509Util.getSslKeystoreLocationProperty(), testDataPath + "/ssl/testKeyStore.jks");
