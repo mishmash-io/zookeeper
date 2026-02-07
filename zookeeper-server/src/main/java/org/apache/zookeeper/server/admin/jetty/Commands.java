@@ -100,6 +100,8 @@ public class Commands {
 
     static {
         // make sure the HTTP-enabled AuthenticationProviders are used
+        // first, trigger an init if necessary
+        ProviderRegistry.getProvider("ip");
         ProviderRegistry.addOrUpdateProvider(new HttpIPAuthenticationProvider());
         if (DigestAuthenticationProvider.isEnabled()) {
             ProviderRegistry.addOrUpdateProvider(new HttpDigestAuthenticationProvider());
