@@ -27,6 +27,8 @@ import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.netty.handler.ssl.OpenSsl;
 import io.netty.handler.ssl.SslProvider;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -45,6 +47,7 @@ import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.apache.zookeeper.server.quorum.QuorumPeerTestBase;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -96,6 +99,9 @@ public class ClientSSLTest extends QuorumPeerTestBase {
         System.setProperty(clientX509Util.getSslKeystorePasswdProperty(), "testpass");
         System.setProperty(clientX509Util.getSslTruststoreLocationProperty(), testDataPath + "/ssl/testTrustStore.jks");
         System.setProperty(clientX509Util.getSslTruststorePasswdProperty(), "testpass");
+
+        // by default, hostname verification is enabled in netty 4.2 (unlike previous versions), disable it:
+        System.setProperty("io.netty.handler.ssl.defaultEndpointVerificationAlgorithm", "NONE");
     }
 
     @AfterEach
@@ -113,6 +119,7 @@ public class ClientSSLTest extends QuorumPeerTestBase {
         System.clearProperty(clientX509Util.getFipsModeProperty());
         System.clearProperty(clientX509Util.getSslHostnameVerificationEnabledProperty());
         System.clearProperty(clientX509Util.getSslProviderProperty());
+        System.clearProperty("io.netty.handler.ssl.defaultEndpointVerificationAlgorithm");
         clientX509Util.close();
     }
 
@@ -154,6 +161,9 @@ public class ClientSSLTest extends QuorumPeerTestBase {
     @ParameterizedTest(name = "sslProvider={0}, fipsEnabled={1}, hostnameVerification={2}")
     @MethodSource("positiveTestData")
     public void testClientServerSSL_positive(SslProvider sslProvider, String fipsEnabled, String hostnameVerification) throws Exception {
+        Assumptions.assumeTrue(sslProvider.equals(SslProvider.JDK) || OpenSsl.isAvailable(),
+                OpenSsl.unavailabilityCause().getMessage());
+
         // Arrange
         System.setProperty(clientX509Util.getSslProviderProperty(), sslProvider.toString());
         System.setProperty(clientX509Util.getFipsModeProperty(), fipsEnabled);
@@ -170,6 +180,9 @@ public class ClientSSLTest extends QuorumPeerTestBase {
     @ParameterizedTest(name = "sslProvider={0}, fipsEnabled={1}")
     @MethodSource("negativeTestData")
     public void testClientServerSSL_negative(SslProvider sslProvider, boolean fipsEnabled) {
+        Assumptions.assumeTrue(sslProvider.equals(SslProvider.JDK) || OpenSsl.isAvailable(),
+                OpenSsl.unavailabilityCause().getMessage());
+
         // Arrange
         System.setProperty(clientX509Util.getSslProviderProperty(), sslProvider.toString());
         System.setProperty(clientX509Util.getFipsModeProperty(), Boolean.toString(fipsEnabled));
