@@ -53,8 +53,11 @@ import org.apache.zookeeper.server.ServerCnxnFactory;
 import org.apache.zookeeper.server.ServerMetrics;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.ZooTrace;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 import org.apache.zookeeper.server.auth.ServerAuthenticationProvider;
+import org.apache.zookeeper.server.auth.admin.HttpDigestAuthenticationProvider;
+import org.apache.zookeeper.server.auth.admin.HttpIPAuthenticationProvider;
 import org.apache.zookeeper.server.persistence.SnapshotInfo;
 import org.apache.zookeeper.server.persistence.Util;
 import org.apache.zookeeper.server.quorum.Follower;
@@ -94,6 +97,14 @@ public class Commands {
     /** Maps command names to Command instances */
     private static Map<String, Command> commands = new HashMap<>();
     private static Set<String> primaryNames = new HashSet<>();
+
+    static {
+        // make sure the HTTP-enabled AuthenticationProviders are used
+        ProviderRegistry.addOrUpdateProvider(new HttpIPAuthenticationProvider());
+        if (DigestAuthenticationProvider.isEnabled()) {
+            ProviderRegistry.addOrUpdateProvider(new HttpDigestAuthenticationProvider());
+        }
+    }
 
     /**
      * Registers the given command. Registered commands can be run by passing

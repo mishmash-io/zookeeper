@@ -87,13 +87,6 @@ public class JettyAdminServer implements AdminServer {
     private final String commandUrl;
     private ZooKeeperServer zkServer;
 
-    static {
-        ProviderRegistry.addOrUpdateProvider(new HttpIPAuthenticationProvider());
-        if (DigestAuthenticationProvider.isEnabled()) {
-            ProviderRegistry.addOrUpdateProvider(new HttpDigestAuthenticationProvider());
-        }
-    }
-
     public JettyAdminServer() throws AdminServerException, IOException, GeneralSecurityException {
         this(
             System.getProperty("zookeeper.admin.serverAddress", DEFAULT_ADDRESS),
