@@ -132,7 +132,6 @@ public class ZooKeeperServerMain {
                 throw new IOException("Cannot boot MetricsProvider " + config.getMetricsProviderClassName(), error);
             }
             ServerMetrics.metricsProviderInitialized(metricsProvider);
-            ProviderRegistry.initialize();
             // Note that this thread isn't going to be doing anything else,
             // so rather than spawning another thread, we will just call
             // run() in this thread.

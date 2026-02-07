@@ -160,7 +160,6 @@ public class QuorumPeerMain {
         }
         try {
             ServerMetrics.metricsProviderInitialized(metricsProvider);
-            ProviderRegistry.initialize();
             ServerCnxnFactory cnxnFactory = null;
             ServerCnxnFactory secureCnxnFactory = null;
 
