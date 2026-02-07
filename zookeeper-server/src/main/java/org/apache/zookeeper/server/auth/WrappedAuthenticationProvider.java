@@ -47,6 +47,16 @@ class WrappedAuthenticationProvider extends ServerAuthenticationProvider {
     /**
      * {@inheritDoc}
      *
+     * forwards to wrapped authentication provider
+     */
+    @Override
+    public <T> List<Id> authenticate(Class<T> klass, T conn, byte[] authData) throws KeeperException {
+        return implementation.authenticate(klass, conn, authData);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * forwards to older method {@link #handleAuthentication(ServerCnxn, byte[])}
      */
     @Override
