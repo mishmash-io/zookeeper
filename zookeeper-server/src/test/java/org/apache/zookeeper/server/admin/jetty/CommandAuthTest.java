@@ -284,6 +284,7 @@ public class CommandAuthTest extends ZKTestCase {
 
         // create SSLContext
         final SSLContext sslContext = SSLContext.getInstance(ClientX509Util.DEFAULT_PROTOCOL);
+        ProviderRegistry.addOrUpdateProvider("zookeeper.authProvider.x509"); // make sure the registry contains the right class
         final X509AuthenticationProvider authProvider = (X509AuthenticationProvider) ProviderRegistry.getProvider("x509");
         if (authProvider == null) {
             throw new X509Exception.SSLContextException("Could not create SSLContext with x509 auth provider");
