@@ -105,7 +105,7 @@ public class X509AuthTest extends ZKTestCase {
 
     @Test
     public void testTrustedAuth_HttpServletRequest() {
-        final X509AuthenticationProvider provider = createProvider(clientCert);
+        final X509AuthenticationProvider provider = createHttpProvider(clientCert);
         final HttpServletRequest mockRequest =  mock(HttpServletRequest.class);
         Mockito.doReturn(new X509Certificate[]{clientCert}).when(mockRequest).getAttribute(HttpX509AuthenticationProvider.X509_CERTIFICATE_ATTRIBUTE_NAME);
         final List<Id> ids = Arrays.asList(new Id("x509", "CN=CLIENT"));
@@ -114,7 +114,7 @@ public class X509AuthTest extends ZKTestCase {
 
     @Test
     public void testSuperAuth_HttpServletRequest() {
-        final X509AuthenticationProvider provider = createProvider(superCert);
+        final X509AuthenticationProvider provider = createHttpProvider(superCert);
         final HttpServletRequest mockRequest =  mock(HttpServletRequest.class);
         Mockito.doReturn(new X509Certificate[]{superCert}).when(mockRequest).getAttribute(HttpX509AuthenticationProvider.X509_CERTIFICATE_ATTRIBUTE_NAME);
         final List<Id> ids = Arrays.asList(new Id("super", "CN=SUPER"), new Id("x509", "CN=SUPER"));
@@ -123,7 +123,7 @@ public class X509AuthTest extends ZKTestCase {
 
     @Test
     public void testUntrustedAuth_HttpServletRequest() {
-        final X509AuthenticationProvider provider = createProvider(clientCert);
+        final X509AuthenticationProvider provider = createHttpProvider(clientCert);
         final HttpServletRequest mockRequest =  mock(HttpServletRequest.class);
         Mockito.doReturn(new X509Certificate[]{unknownCert}).when(mockRequest).getAttribute(HttpX509AuthenticationProvider.X509_CERTIFICATE_ATTRIBUTE_NAME);
         assertTrue(assertDoesNotThrow((ThrowingSupplier<List<Id>>)(() -> provider.authenticate(HttpServletRequest.class, mockRequest, null))).isEmpty());
@@ -320,6 +320,10 @@ public class X509AuthTest extends ZKTestCase {
 
     protected X509AuthenticationProvider createProvider(X509Certificate trustedCert) {
         return new X509AuthenticationProvider(new TestTrustManager(trustedCert), new TestKeyManager());
+    }
+
+    protected X509AuthenticationProvider createHttpProvider(X509Certificate trustedCert) {
+        return new HttpX509AuthenticationProvider(new TestTrustManager(trustedCert), new TestKeyManager());
     }
 
 }
