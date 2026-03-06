@@ -25,7 +25,6 @@ import java.security.Security;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import jline.internal.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.zookeeper.PortAssignment;
 import org.apache.zookeeper.WatchedEvent;
@@ -43,6 +42,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,8 +52,10 @@ public class ClientSSLReloadTest extends ZKTestCase {
     private X509TestContext x509TestContext1;
     private X509TestContext x509TestContext2;
 
-    private File dir1;
-    private File dir2;
+    @TempDir
+    File dir1;
+    @TempDir
+    File dir2;
 
     private File keyStoreFile1;
     private File trustStoreFile1;
@@ -63,9 +65,6 @@ public class ClientSSLReloadTest extends ZKTestCase {
 
     @BeforeEach
     public void setup() throws Exception {
-
-        dir1 = ClientBase.createEmptyTestDir();
-        dir2 = ClientBase.createEmptyTestDir();
 
         Security.addProvider(new BouncyCastleProvider());
 
@@ -92,12 +91,6 @@ public class ClientSSLReloadTest extends ZKTestCase {
 
     @AfterEach
     public void teardown() throws Exception {
-        try {
-            FileUtils.deleteDirectory(dir1);
-            FileUtils.deleteDirectory(dir2);
-        } catch (IOException e) {
-            // ignore
-        }
         Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
     }
 
@@ -150,7 +143,7 @@ public class ClientSSLReloadTest extends ZKTestCase {
                 assertTrue(l.await(10, TimeUnit.SECONDS));
             }
 
-            Log.info("Updating keyStore & trustStore files !!!!");
+            LOG.info("Updating keyStore & trustStore files !!!!");
             // Update the keyStoreFile1 and trustStoreFile1 files in the filesystem with keyStoreFile2 & trustStoreFile2
             FileUtils.writeStringToFile(keyStoreFile1, FileUtils.readFileToString(keyStoreFile2, StandardCharsets.US_ASCII), StandardCharsets.US_ASCII, false);
             FileUtils.writeStringToFile(trustStoreFile1, FileUtils.readFileToString(trustStoreFile2, StandardCharsets.US_ASCII), StandardCharsets.US_ASCII, false);

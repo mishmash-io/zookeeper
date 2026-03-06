@@ -145,6 +145,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
 
     private static final char[] PASSWORD = "testpass".toCharArray();
     private static final String HOSTNAME = "localhost";
+    private static final String IPADDRESS = "127.0.0.1";
 
     private QuorumX509Util quorumX509Util;
 
@@ -210,7 +211,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         // Write the truststore
         KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
         trustStore.load(null, PASSWORD);
-        trustStore.setCertificateEntry(rootCertificate.getSubjectDN().toString(), rootCertificate);
+        trustStore.setCertificateEntry(rootCertificate.getSubjectX500Principal().toString(), rootCertificate);
         FileOutputStream outputStream = new FileOutputStream(truststorePath);
         trustStore.store(outputStream, PASSWORD);
         outputStream.flush();
@@ -497,6 +498,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         System.clearProperty(quorumX509Util.getSslTruststorePasswdProperty());
         System.clearProperty(quorumX509Util.getSslTruststorePasswdPathProperty());
         System.clearProperty(quorumX509Util.getSslHostnameVerificationEnabledProperty());
+        System.clearProperty(quorumX509Util.getSslAllowReverseDnsLookupProperty());
         System.clearProperty(quorumX509Util.getSslOcspEnabledProperty());
         System.clearProperty(quorumX509Util.getSslCrlEnabledProperty());
         System.clearProperty(quorumX509Util.getCipherSuitesProperty());
@@ -710,6 +712,8 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void testHostnameVerificationWithInvalidIpAddressAndValidHostname(boolean fipsEnabled) throws Exception {
         System.setProperty(quorumX509Util.getFipsModeProperty(), Boolean.toString(fipsEnabled));
+        // We need reverse DNS lookup to get this working, because quorum is connecting via ip addresses
+        System.setProperty(quorumX509Util.getSslAllowReverseDnsLookupProperty(), Boolean.toString(true));
 
         String badhostnameKeystorePath = tmpDir + "/badhost.jks";
         X509Certificate badHostCert = buildEndEntityCert(
@@ -815,7 +819,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
             rootCertificate,
             rootKeyPair.getPrivate(),
             HOSTNAME,
-            null,
+            IPADDRESS,
             crlPath,
             null);
         writeKeystore(revokedInCRLCert, defaultKeyPair, revokedInCRLKeystorePath);
@@ -845,7 +849,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
             rootCertificate,
             rootKeyPair.getPrivate(),
             HOSTNAME,
-            null,
+            IPADDRESS,
             crlPath,
             null);
         writeKeystore(validCertificate, defaultKeyPair, validKeystorePath);
@@ -884,7 +888,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
             rootCertificate,
             rootKeyPair.getPrivate(),
             HOSTNAME,
-            null,
+            IPADDRESS,
             null,
             ocspPort);
         writeKeystore(revokedInOCSPCert, defaultKeyPair, revokedInOCSPKeystorePath);
@@ -911,6 +915,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
             assertTrue(ClientBase.waitForServerDown("127.0.0.1:" + clientPortQp3, CONNECTION_TIMEOUT));
 
             setSSLSystemProperties();
+            System.setProperty(quorumX509Util.getSslCrlEnabledProperty(), "true");
             System.setProperty(quorumX509Util.getSslOcspEnabledProperty(), "true");
 
             X509Certificate validCertificate = buildEndEntityCert(
@@ -918,7 +923,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
                 rootCertificate,
                 rootKeyPair.getPrivate(),
                 HOSTNAME,
-                null,
+                IPADDRESS,
                 null,
                 ocspPort);
             writeKeystore(validCertificate, defaultKeyPair, validKeystorePath);

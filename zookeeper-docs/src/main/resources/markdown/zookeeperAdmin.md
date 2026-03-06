@@ -1759,6 +1759,16 @@ and [SASL authentication for ZooKeeper](https://cwiki.apache.org/confluence/disp
     This option requires the corresponding *hostnameVerification* option to be `true`, or it will be ignored.
     Default: true for quorum, false for clients
 
+* *ssl.allowReverseDnsLookup* and *ssl.quorum.allowReverseDnsLookup* :
+    (Java system properties: **zookeeper.ssl.allowReverseDnsLookup** and **zookeeper.ssl.quorum.allowReverseDnsLookup**)
+    **New in 3.9.5:**
+    Allow reverse DNS lookup in both server- and client hostname verifications if the hostname verification is enabled in
+    `ZKTrustManager`. Supported in both quorum and client TLS protocols. Not supported in FIPS mode. Reverse DNS lookups are
+    expensive and unnecessary in most cases. Make sure that certificates are created with all required Subject Alternative
+    Names (SAN) for successful identity verification. It's recommended to add SAN:IP entries for identity verification
+    of client certificates.
+    Default: false (for Client connections), true (for Quorum connections)
+
 * *ssl.crl* and *ssl.quorum.crl* :
     (Java system properties: **zookeeper.ssl.crl** and **zookeeper.ssl.quorum.crl**)
     **New in 3.5.5:**
@@ -1769,6 +1779,10 @@ and [SASL authentication for ZooKeeper](https://cwiki.apache.org/confluence/disp
     (Java system properties: **zookeeper.ssl.ocsp** and **zookeeper.ssl.quorum.ocsp**)
     **New in 3.5.5:**
     Specifies whether Online Certificate Status Protocol is enabled in client and quorum TLS protocols.
+    **Changed in next feature version:**
+    Currently, *ssl.ocsp* and *ssl.quorum.ocsp* implies *ssl.crl* and *ssl.quorum.crl* correspondingly.
+    In next feature release, one has to setup both *ssl.crl* and *ssl.ocsp* (or *ssl.quorum.crl* and *ssl.quorum.ocsp*)
+    to enable OCSP. This is consistent with jdk's method of [Setting up a Java Client to use Client-Driven OCSP](https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/ocsp.html#setting-up-a-java-client-to-use-client-driven-ocsp).
     Default: false
 
 * *ssl.clientAuth* and *ssl.quorum.clientAuth* :

@@ -345,16 +345,14 @@ public class DataTree {
                || configZookeeper.equals(path);
     }
 
+    /**
+     * Use {@link StatPersisted#copyFrom(StatPersisted)} instead.
+     *
+     * <p>Apache Curator uses it, let's keep it for now to let them and their clients to react.
+     */
+    @Deprecated
     public static void copyStatPersisted(StatPersisted from, StatPersisted to) {
-        to.setAversion(from.getAversion());
-        to.setCtime(from.getCtime());
-        to.setCversion(from.getCversion());
-        to.setCzxid(from.getCzxid());
-        to.setMtime(from.getMtime());
-        to.setMzxid(from.getMzxid());
-        to.setPzxid(from.getPzxid());
-        to.setVersion(from.getVersion());
-        to.setEphemeralOwner(from.getEphemeralOwner());
+        to.copyFrom(from);
     }
 
     /**
@@ -1296,7 +1294,7 @@ public class DataTree {
         DataNode nodeCopy;
         synchronized (node) {
             StatPersisted statCopy = new StatPersisted();
-            copyStatPersisted(node.stat, statCopy);
+            statCopy.copyFrom(node.stat);
             //we do not need to make a copy of node.data because the contents
             //are never changed
             nodeCopy = new DataNode(node.data, node.acl, statCopy);

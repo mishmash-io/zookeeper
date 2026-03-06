@@ -21,7 +21,9 @@ package org.apache.zookeeper.common;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -61,27 +63,52 @@ public class ZKConfig {
     }
 
     /**
+     * <p><b>Use {@link ZKConfig#ZKConfig(Path configPath)} instead.</b>
+     *
+     * <p><b>The signature of this method will be changed to throw {@link ConfigException}
+     * instead of {@link org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException} in future release.</b>
+     *
      * @param configPath
      *            Configuration file path
      * @throws ConfigException
      *             if failed to load configuration properties
      */
-
+    @Deprecated
     public ZKConfig(String configPath) throws ConfigException {
         this(new File(configPath));
     }
 
     /**
+     * <p><b>Use {@link ZKConfig#ZKConfig(Path configPath)} instead.</b>
+     *
+     * <p><b>The signature of this method will be changed to throw {@link ConfigException}
+     * instead of {@link org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException} in future release.</b>
      *
      * @param configFile
      *            Configuration file
      * @throws ConfigException
      *             if failed to load configuration properties
      */
+    @Deprecated
     public ZKConfig(File configFile) throws ConfigException {
         this();
         addConfiguration(configFile);
-        LOG.info("ZK Config {}", this.properties);
+        Map<String, String> p = new HashMap<>();
+        for (Entry<String, String> entry : properties.entrySet()) {
+            p.put(entry.getKey(), logRedactor(entry.getKey(), entry.getValue()));
+        }
+        LOG.info("ZK Config {}", p);
+    }
+
+    /**
+     * Constructs a {@link ZKConfig} with properties from file.
+     *
+     * @param configPath path to configuration file
+     * @throws ConfigException
+     */
+    @SuppressWarnings("deprecation")
+    public ZKConfig(Path configPath) throws ConfigException {
+        this(configPath.toFile());
     }
 
     private void init() {
@@ -128,6 +155,7 @@ public class ZKConfig {
         properties.put(x509Util.getSslContextSupplierClassProperty(), System.getProperty(x509Util.getSslContextSupplierClassProperty()));
         properties.put(x509Util.getSslClientHostnameVerificationEnabledProperty(), System.getProperty(x509Util.getSslClientHostnameVerificationEnabledProperty()));
         properties.put(x509Util.getSslHostnameVerificationEnabledProperty(), System.getProperty(x509Util.getSslHostnameVerificationEnabledProperty()));
+        properties.put(x509Util.getSslAllowReverseDnsLookupProperty(), System.getProperty(x509Util.getSslAllowReverseDnsLookupProperty()));
         properties.put(x509Util.getSslCrlEnabledProperty(), System.getProperty(x509Util.getSslCrlEnabledProperty()));
         properties.put(x509Util.getSslOcspEnabledProperty(), System.getProperty(x509Util.getSslOcspEnabledProperty()));
         properties.put(x509Util.getSslClientAuthProperty(), System.getProperty(x509Util.getSslClientAuthProperty()));
@@ -182,7 +210,7 @@ public class ZKConfig {
         }
         String oldValue = properties.put(key, value);
         if (null != oldValue && !oldValue.equals(value)) {
-            LOG.debug("key {}'s value {} is replaced with new value {}", key, oldValue, value);
+            LOG.debug("key {}'s value {} is replaced with new value {}", key, logRedactor(key, oldValue), logRedactor(key, value));
         }
     }
 
@@ -190,9 +218,26 @@ public class ZKConfig {
      * Add a configuration resource. The properties form this configuration will
      * overwrite corresponding already loaded property and system property
      *
+     * @param configPath path to Configuration file.
+     */
+    @SuppressWarnings("deprecation")
+    public void addConfiguration(Path configPath) throws ConfigException {
+        addConfiguration(configPath.toFile());
+    }
+
+    /**
+     * <p><b>Use {@link #addConfiguration(Path)} instead.</b></p>
+     *
+     * <p><b>The signature of this method will be changed to throw {@link ConfigException}
+     * instead of {@link org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException} in future release.</b>
+     *
+     * <p>Add a configuration resource. The properties form this configuration will
+     * overwrite corresponding already loaded property and system property
+     *
      * @param configFile
      *            Configuration file.
      */
+    @Deprecated
     public void addConfiguration(File configFile) throws ConfigException {
         LOG.info("Reading configuration from: {}", configFile.getAbsolutePath());
         try {
@@ -214,12 +259,18 @@ public class ZKConfig {
     }
 
     /**
-     * Add a configuration resource. The properties form this configuration will
+     * <p><b>Use {@link #addConfiguration(Path)} instead.</b></p>
+     *
+     * <p><b>The signature of this method will be changed to throw {@link ConfigException}
+     * instead of {@link org.apache.zookeeper.server.quorum.QuorumPeerConfig.ConfigException} in future release.</b>
+     *
+     * <p>Add a configuration resource. The properties form this configuration will
      * overwrite corresponding already loaded property and system property
      *
      * @param configPath
      *            Configuration file path.
      */
+    @Deprecated
     public void addConfiguration(String configPath) throws ConfigException {
         addConfiguration(new File(configPath));
     }
@@ -283,4 +334,13 @@ public class ZKConfig {
         return defaultValue;
     }
 
+    private String logRedactor(String key, String value) {
+        if (key == null) {
+            return value;
+        }
+        if (key.toLowerCase(Locale.ROOT).endsWith("password")) {
+            return "***";
+        }
+        return value;
+    }
 }

@@ -31,12 +31,16 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
+import java.security.cert.CertPathValidator;
 import java.security.cert.PKIXBuilderParameters;
+import java.security.cert.PKIXRevocationChecker;
 import java.security.cert.X509CertSelector;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -188,6 +192,7 @@ public abstract class X509Util implements Closeable, AutoCloseable {
     private final String sslContextSupplierClassProperty = getConfigPrefix() + "context.supplier.class";
     private final String sslHostnameVerificationEnabledProperty = getConfigPrefix() + "hostnameVerification";
     private final String sslClientHostnameVerificationEnabledProperty = getConfigPrefix() + "clientHostnameVerification";
+    private final String sslAllowReverseDnsLookupProperty = getConfigPrefix() + "allowReverseDnsLookup";
     private final String sslCrlEnabledProperty = getConfigPrefix() + "crl";
     private final String sslOcspEnabledProperty = getConfigPrefix() + "ocsp";
     private final String sslClientAuthProperty = getConfigPrefix() + "clientAuth";
@@ -205,6 +210,8 @@ public abstract class X509Util implements Closeable, AutoCloseable {
     protected abstract String getConfigPrefix();
 
     protected abstract boolean shouldVerifyClientHostname();
+
+    protected abstract boolean shouldAllowReverseDnsLookup();
 
     public String getSslProtocolProperty() {
         return sslProtocolProperty;
@@ -266,6 +273,10 @@ public abstract class X509Util implements Closeable, AutoCloseable {
         return sslClientHostnameVerificationEnabledProperty;
     }
 
+    public String getSslAllowReverseDnsLookupProperty() {
+        return sslAllowReverseDnsLookupProperty;
+    }
+
     public String getSslCrlEnabledProperty() {
         return sslCrlEnabledProperty;
     }
@@ -303,6 +314,10 @@ public abstract class X509Util implements Closeable, AutoCloseable {
     public boolean isClientHostnameVerificationEnabled(ZKConfig config) {
         return isServerHostnameVerificationEnabled(config)
             && config.getBoolean(this.getSslClientHostnameVerificationEnabledProperty(), shouldVerifyClientHostname());
+    }
+
+    public boolean allowReverseDnsLookup(ZKConfig config) {
+        return config.getBoolean(this.getSslAllowReverseDnsLookupProperty(), shouldAllowReverseDnsLookup());
     }
 
     public SSLContext getDefaultSSLContext() throws X509Exception.SSLContextException {
@@ -418,6 +433,7 @@ public abstract class X509Util implements Closeable, AutoCloseable {
         boolean sslOcspEnabled = config.getBoolean(this.sslOcspEnabledProperty);
         boolean sslServerHostnameVerificationEnabled = isServerHostnameVerificationEnabled(config);
         boolean sslClientHostnameVerificationEnabled = isClientHostnameVerificationEnabled(config);
+        boolean allowReverseDnsLookup = allowReverseDnsLookup(config);
         boolean fipsMode = getFipsMode(config);
 
         if (trustStoreLocationProp.isEmpty()) {
@@ -427,7 +443,7 @@ public abstract class X509Util implements Closeable, AutoCloseable {
                 trustManagers = new TrustManager[]{
                     createTrustManager(trustStoreLocationProp, trustStorePasswordProp, trustStoreTypeProp, sslCrlEnabled,
                         sslOcspEnabled, sslServerHostnameVerificationEnabled, sslClientHostnameVerificationEnabled,
-                        fipsMode)};
+                        allowReverseDnsLookup, fipsMode)};
             } catch (TrustManagerException trustManagerException) {
                 throw new SSLContextException("Failed to create TrustManager", trustManagerException);
             } catch (IllegalArgumentException e) {
@@ -563,6 +579,7 @@ public abstract class X509Util implements Closeable, AutoCloseable {
         boolean ocspEnabled,
         final boolean serverHostnameVerificationEnabled,
         final boolean clientHostnameVerificationEnabled,
+        final boolean allowReverseDnsLookup,
         final boolean fipsMode) throws TrustManagerException {
         if (trustStorePassword == null) {
             trustStorePassword = "";
@@ -571,12 +588,36 @@ public abstract class X509Util implements Closeable, AutoCloseable {
             KeyStore ts = loadTrustStore(trustStoreLocation, trustStorePassword, trustStoreTypeProp);
             PKIXBuilderParameters pbParams = new PKIXBuilderParameters(ts, new X509CertSelector());
             if (crlEnabled || ocspEnabled) {
-                pbParams.setRevocationEnabled(true);
-                System.setProperty("com.sun.net.ssl.checkRevocation", "true");
-                System.setProperty("com.sun.security.enableCRLDP", "true");
-                if (ocspEnabled) {
-                    Security.setProperty("ocsp.enable", "true");
+                // See [RevocationChecker][1] for details. Basically, we are mimicking the legacy path,
+                // which relies significantly on jvm wide properties[2], as that is the path we are routing
+                // before (i.e. no explicit `PKIXRevocationChecker`).
+                //
+                // By reading but not writing these properties, we conform to but not interfere with what
+                // admin set while still keep backward compatibility.
+                // 1. Default "zookeeper.ssl.crl" to jvm property "com.sun.net.ssl.checkRevocation" if it is unset in upcoming feature version.
+                // 2. Default "zookeeper.ssl.ocsp" to jvm security property "ocsp.enable" if it is unset in upcoming feature version.
+                // 3. Set `Option.ONLY_END_ENTITY` for jvm security property "com.sun.security.onlyCheckRevocationOfEECert".
+                // 4. Don't set "com.sun.security.enableCRLDP" as it is always enabled in no legacy path.
+                //
+                // See also:
+                // * https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/ocsp.html
+                // * https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html
+                // * https://docs.oracle.com/javase/8/docs/technotes/guides/security/certpath/CertPathProgGuide.html#PKIXRevocationChecker
+                //
+                // [1]: https://github.com/openjdk/jdk/blob/jdk-11%2B28/src/java.base/share/classes/sun/security/provider/certpath/RevocationChecker.java#L124
+                // [2]: https://github.com/openjdk/jdk/blob/jdk-11%2B28/src/java.base/share/classes/sun/security/provider/certpath/RevocationChecker.java#L179
+                Set<PKIXRevocationChecker.Option> options = new HashSet<>();
+                if (!ocspEnabled) {
+                    options.add(PKIXRevocationChecker.Option.NO_FALLBACK);
+                    options.add(PKIXRevocationChecker.Option.PREFER_CRLS);
                 }
+                if (Boolean.parseBoolean(Security.getProperty("com.sun.security.onlyCheckRevocationOfEECert")))  {
+                    options.add(PKIXRevocationChecker.Option.ONLY_END_ENTITY);
+                }
+
+                PKIXRevocationChecker revocationChecker = (PKIXRevocationChecker) CertPathValidator.getInstance("PKIX").getRevocationChecker();
+                revocationChecker.setOptions(options);
+                pbParams.addCertPathChecker(revocationChecker);
             } else {
                 pbParams.setRevocationEnabled(false);
             }
@@ -597,7 +638,7 @@ public abstract class X509Util implements Closeable, AutoCloseable {
                         LOG.debug("FIPS mode is OFF: creating ZKTrustManager");
                     }
                     return new ZKTrustManager((X509ExtendedTrustManager) tm, serverHostnameVerificationEnabled,
-                        clientHostnameVerificationEnabled);
+                        clientHostnameVerificationEnabled, allowReverseDnsLookup);
                 }
             }
             throw new TrustManagerException("Couldn't find X509TrustManager");

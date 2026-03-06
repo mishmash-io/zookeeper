@@ -83,7 +83,6 @@ import org.apache.zookeeper.proto.SetDataResponse;
 import org.apache.zookeeper.proto.SyncRequest;
 import org.apache.zookeeper.proto.SyncResponse;
 import org.apache.zookeeper.proto.WhoAmIResponse;
-import org.apache.zookeeper.util.DataUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,15 +149,14 @@ public class ZooKeeper implements AutoCloseable {
      *             instead.
      */
     @Deprecated
-    public static final String ZOOKEEPER_CLIENT_CNXN_SOCKET = "zookeeper.clientCnxnSocket";
-    // Setting this to "true" will enable encrypted client-server communication.
+    public static final String ZOOKEEPER_CLIENT_CNXN_SOCKET = ZKClientConfig.ZOOKEEPER_CLIENT_CNXN_SOCKET;
 
     /**
      * @deprecated Use {@link ZKClientConfig#SECURE_CLIENT}
      *             instead.
      */
     @Deprecated
-    public static final String SECURE_CLIENT = "zookeeper.client.secure";
+    public static final String SECURE_CLIENT = ZKClientConfig.SECURE_CLIENT;
 
     protected final ClientCnxn cnxn;
     private static final Logger LOG;
@@ -1450,7 +1448,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataUtils.copyStat(response.getStat(), stat);
+            stat.copyFrom(response.getStat());
         }
         if (cnxn.chrootPath == null) {
             return response.getPath();
@@ -1972,7 +1970,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataUtils.copyStat(response.getStat(), stat);
+            stat.copyFrom(response.getStat());
         }
         return response.getData();
     }
@@ -2074,7 +2072,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), configZnode);
         }
         if (stat != null) {
-            DataUtils.copyStat(response.getStat(), stat);
+            stat.copyFrom(response.getStat());
         }
         return response.getData();
     }
@@ -2236,7 +2234,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataUtils.copyStat(response.getStat(), stat);
+            stat.copyFrom(response.getStat());
         }
         return response.getAcl();
     }
@@ -2480,7 +2478,7 @@ public class ZooKeeper implements AutoCloseable {
             throw KeeperException.create(KeeperException.Code.get(r.getErr()), clientPath);
         }
         if (stat != null) {
-            DataUtils.copyStat(response.getStat(), stat);
+            stat.copyFrom(response.getStat());
         }
         return response.getChildren();
     }
