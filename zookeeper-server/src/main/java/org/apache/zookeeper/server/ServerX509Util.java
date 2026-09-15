@@ -18,11 +18,11 @@
 
 package org.apache.zookeeper.server;
 
-import org.apache.zookeeper.common.NettyClientX509Util;
+import org.apache.zookeeper.common.ClientNettyX509Util;
 import org.apache.zookeeper.common.X509Exception;
 import org.apache.zookeeper.server.auth.ProviderRegistry;
 
-public class ServerX509Util extends NettyClientX509Util {
+public class ServerX509Util extends ClientNettyX509Util {
 
     @Override
     protected void resetDefaultSSLContextAndOptions() throws X509Exception.SSLContextException {

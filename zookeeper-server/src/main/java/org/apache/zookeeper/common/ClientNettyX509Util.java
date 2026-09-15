@@ -35,7 +35,7 @@ import javax.net.ssl.TrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NettyClientX509Util extends ClientX509Util {
+public class ClientNettyX509Util extends ClientX509Util {
 
     private static final Logger LOG = LoggerFactory.getLogger(NettyClientX509Util.class);
 
