@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.zookeeper</groupId>
     <artifactId>parent</artifactId>
-    <version>3.9.5</version>
+    <version>3.9.6</version>
   </parent>
 
   <artifactId>zookeeper-assembly</artifactId>
@@ -102,6 +102,7 @@
     <dependency>
       <groupId>org.jline</groupId>
       <artifactId>jline</artifactId>
+      <classifier>jdk8</classifier>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>

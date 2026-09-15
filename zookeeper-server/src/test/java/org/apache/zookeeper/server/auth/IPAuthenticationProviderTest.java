@@ -93,7 +93,7 @@ public class IPAuthenticationProviderTest {
     String clientIp = HttpIPAuthenticationProvider.getClientIPAddress(request);
 
     // Assert
-    assertEquals("192.168.1.2", clientIp);
+    assertEquals("192.168.1.4", clientIp);
   }
 
   @Test

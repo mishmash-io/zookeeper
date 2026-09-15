@@ -187,6 +187,7 @@ public final class SecurityUtils {
     /**
      * Create an instance of a SaslServer. It will return null if there is an exception.
      *
+     * @param config to check whether FIPS mode is enabled.
      * @param subject subject
      * @param protocol protocol
      * @param serverName server name
@@ -195,6 +196,7 @@ public final class SecurityUtils {
      * @return sasl server object
      */
     public static SaslServer createSaslServer(
+        final ZKConfig config,
         final Subject subject,
         final String protocol,
         final String serverName,
@@ -303,6 +305,11 @@ public final class SecurityUtils {
             } else {
                 // Non-Principal, use DIGEST-MD5 or the provided mechanism name.
                 // TODO: use 'authMech=' value in zoo.cfg.
+                // FIPS-mode: don't try DIGEST-MD5, just return error
+                if (X509Util.getFipsMode(config)) {
+                    LOG.warn("SaslServer will not use DIGEST-MD5 as SASL mechanism, because FIPS mode is enabled.");
+                    return null;
+                }
                 try {
                     SaslServer saslServer = Sasl.createSaslServer(
                             saslMech == null ? "DIGEST-MD5" : saslMech,

@@ -23,6 +23,7 @@ import javax.security.sasl.SaslException;
 import javax.security.sasl.SaslServer;
 
 import org.apache.zookeeper.common.Login;
+import org.apache.zookeeper.common.ZKConfig;
 import org.apache.zookeeper.util.SecurityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +39,11 @@ public class ZooKeeperSaslServer {
     public static final String SASL_MECHANISM_NAME = "zookeeper.sasl.server.mechanism";
 
     private static final Logger LOG = LoggerFactory.getLogger(ZooKeeperSaslServer.class);
-    private SaslServer saslServer;
+    private final SaslServer saslServer;
+    private final ZKConfig config;
 
     ZooKeeperSaslServer(final Login login) {
+        config = new ZKConfig();
         saslServer = createSaslServer(login);
     }
 
@@ -48,6 +51,7 @@ public class ZooKeeperSaslServer {
         synchronized (login) {
             Subject subject = login.getSubject();
             return SecurityUtils.createSaslServer(
+                    config,
                     subject,
                     "zookeeper",
                     "zk-sasl-md5",
@@ -58,6 +62,10 @@ public class ZooKeeperSaslServer {
     }
 
     public byte[] evaluateResponse(byte[] response) throws SaslException {
+        if (saslServer == null) {
+            LOG.error("SaslServer failed to initialize (FIPS mode may have blocked DIGEST-MD5). Cannot authenticate client.");
+            throw new SaslException("SaslServer is null, cannot evaluate client SASL response.");
+        }
         return saslServer.evaluateResponse(response);
     }
 

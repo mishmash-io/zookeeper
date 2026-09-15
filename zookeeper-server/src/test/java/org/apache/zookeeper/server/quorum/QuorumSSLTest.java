@@ -631,7 +631,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         }
     }
 
-    @TestNoFipsOnly
+    @TestBothFipsModes
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void testHostnameVerificationWithInvalidHostname(boolean fipsEnabled) throws Exception {
         System.setProperty(quorumX509Util.getFipsModeProperty(), Boolean.toString(fipsEnabled));
@@ -649,7 +649,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         testHostnameVerification(badhostnameKeystorePath, false);
     }
 
-    @TestNoFipsOnly
+    @TestBothFipsModes
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void testHostnameVerificationWithInvalidIPAddress(boolean fipsEnabled) throws Exception {
         System.setProperty(quorumX509Util.getFipsModeProperty(), Boolean.toString(fipsEnabled));
@@ -667,7 +667,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         testHostnameVerification(badhostnameKeystorePath, false);
     }
 
-    @TestNoFipsOnly
+    @TestBothFipsModes
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void testHostnameVerificationWithInvalidIpAddressAndInvalidHostname(boolean fipsEnabled) throws Exception {
         System.setProperty(quorumX509Util.getFipsModeProperty(), Boolean.toString(fipsEnabled));
@@ -686,7 +686,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         testHostnameVerification(badhostnameKeystorePath, false);
     }
 
-    @TestNoFipsOnly
+    @TestBothFipsModes
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void testHostnameVerificationForInvalidMultiAddressServerConfig(boolean fipsEnabled) throws Exception {
         System.setProperty(quorumX509Util.getFipsModeProperty(), Boolean.toString(fipsEnabled));
@@ -708,6 +708,10 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         testHostnameVerification(badhostnameKeystorePath, false);
     }
 
+    /**
+     * This test is NoFips only, because it needs reverse Dns lookup for client hostname verification,
+     * which is not supported in Fips mode.
+     */
     @TestNoFipsOnly
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void testHostnameVerificationWithInvalidIpAddressAndValidHostname(boolean fipsEnabled) throws Exception {
@@ -729,7 +733,7 @@ public class QuorumSSLTest extends QuorumPeerTestBase {
         testHostnameVerification(badhostnameKeystorePath, true);
     }
 
-    @TestNoFipsOnly
+    @TestBothFipsModes
     @Timeout(value = 5, unit = TimeUnit.MINUTES)
     public void testHostnameVerificationWithValidIpAddressAndInvalidHostname(boolean fipsEnabled) throws Exception {
         System.setProperty(quorumX509Util.getFipsModeProperty(), Boolean.toString(fipsEnabled));
